@@ -51,7 +51,14 @@ def run(config):
     experiment_name = get_experiment_name(config)
     config["project"] = f"{config['project']}-{config['dataset']}"
     
-    device = torch.device('cuda' if torch.cuda.is_available() else 'mps' if torch.backends.mps.is_available() else 'cpu')
+    if torch.cuda.is_available():
+        device = torch.device('cuda')
+    # Check if 'mps' backend is available for Apple Silicon support
+    elif hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
+        device = torch.device('mps')
+    else:
+        device = torch.device('cpu')
+        
     train_loader, test_loader, visualize_loader = get_data_loader(config["dataset"], config["batch_size"])
     model = Network(config["backbone"], 10, config["batch_size"], 128, config["variational"]).to(device)
     print(f'The model has {count_parameters(model):,} trainable parameters.')
