@@ -3,8 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 from dataclasses import dataclass
-from collections.abc import Callable
-from typing import Union
+from typing import Union, Optional, Callable
 import abc
 import warnings
 
@@ -28,8 +27,7 @@ class VBLLReturn:
     train_loss_fn: Callable[[torch.Tensor], torch.Tensor]
     val_loss_fn: Callable[[torch.Tensor], torch.Tensor]
     
-    # Using Union to allow None as a valid value
-    ood_scores: Union[None, Callable[[torch.Tensor], torch.Tensor]] = None
+    ood_scores: Optional[Callable[[torch.Tensor], torch.Tensor]] = None
 
 
 class DiscClassification(nn.Module):
