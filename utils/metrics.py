@@ -39,7 +39,7 @@ def evaluate(model, loader, device):
 
     # 使用 K-means 聚类
     n_clusters = len(np.unique(labels))
-    kmeans_backbone = KMeans(n_clusters=n_clusters, random_state=42).fit(embeddings_backbone)
+    kmeans_backbone = KMeans(n_clusters=n_clusters, n_init=10, random_state=42).fit(embeddings_backbone)
 
     # 计算 NMI 和 ARI
     nmi_backbone = metrics.normalized_mutual_info_score(labels, kmeans_backbone.labels_)
