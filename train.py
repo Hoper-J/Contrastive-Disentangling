@@ -148,7 +148,7 @@ def run(config):
         records.update_best_metrics(nmi_backbone, ari_backbone, acc_backbone, nmi_classifier, ari_classifier, acc_classifier)
         
 
-        if (epoch) % 10 == 0:
+        if (epoch) % 10 == 0 and config["class_num"] == 10:
             visualize_embeddings(model, visualize_loader, device, epoch, wandb.run.name)
 
         if (epoch) % 100 == 0:
@@ -173,19 +173,20 @@ def run(config):
 
 
 config = {
-        "dataset": "imagenet10",
-        "batch_size": 128,
-        "epochs": 600,
-        "learning_rate": 3e-4,
-        "backbone": "ResNet34",
-        "instance": True,
-        "cluster": True,
-        "variational": True,
-        "checkpoint": True,
-        "reload": True,
-        "save_model": True,
-        "project": "CVC",
-        "seed": 42,
-    }
+    "dataset": "imagenet10",
+    "class_num": 100,
+    "batch_size": 128,
+    "epochs": 1000,
+    "learning_rate": 3e-4,
+    "backbone": "ResNet34",
+    "instance": True,
+    "cluster": True,
+    "variational": True,
+    "checkpoint": True,
+    "reload": True,
+    "save_model": True,
+    "project": "CVC",
+    "seed": 42,
+}
     
 run(config)
