@@ -47,4 +47,4 @@ class ExperimentRecords:
     def save_csv(self, run_name):
         df = pd.DataFrame(self.records).T
         os.makedirs('csv', exist_ok=True)
-        df.to_csv(os.path.join('csv', f'records_{run_name}.csv'), index=False)
+        df.to_csv(os.path.join('csv', f'records_{run_name}.csv'), index=True)
