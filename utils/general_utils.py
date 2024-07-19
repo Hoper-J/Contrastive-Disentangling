@@ -20,7 +20,7 @@ def count_parameters(model):
     """
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
-def save_best_model(nmi_backbone, nmi_classifier, best_nmi, config, model):
+def save_best_model(nmi_backbone, nmi_classifier, best_nmi, config, model, model_name):
     """
     Save the model if it achieves the best NMI score so far.
 
@@ -30,6 +30,7 @@ def save_best_model(nmi_backbone, nmi_classifier, best_nmi, config, model):
     - best_nmi (float): Best NMI score so far.
     - config (dict): Configuration dictionary.
     - model: The model to save.
+    - model_name (str): Name of the saved model.
 
     Returns:
     - float: Updated best NMI score.
@@ -37,7 +38,7 @@ def save_best_model(nmi_backbone, nmi_classifier, best_nmi, config, model):
     if nmi_backbone > best_nmi or nmi_classifier > best_nmi:
         best_nmi = max(nmi_backbone, nmi_classifier)
         if config["save_model"]:
-            model_path = os.path.join('models', f'best_model.pth')
+            model_path = os.path.join('models', f'best_model_{model_name}.pth')
             os.makedirs(os.path.dirname(model_path), exist_ok=True)
             torch.save(model.state_dict(), model_path)
             print(f"Saved best model with NMI {best_nmi:.4f} to {model_path}")
@@ -54,8 +55,11 @@ def move_model_to_finished(cfg, model_name):
     - model_name (str): Name of the saved model.
     """
     if cfg["save_model"]:
-        finished_model_path = os.path.join('models', 'finished', os.path.basename(model_name))
+        best_model_path = os.path.join('models', f'best_model_{model_name}.pth')
+        finished_model_path = os.path.join('models', 'finished', os.path.basename(best_model_path))
+        print(best_model_path, finished_model_path)
         os.makedirs(os.path.dirname(finished_model_path), exist_ok=True)
-        best_model_path = os.path.join('models', f'best_model.pth')
-        shutil.move(model_path, finished_model_path)
+        shutil.move(best_model_path, finished_model_path)
         print(f"Moved best model to {finished_model_path}")
+
+

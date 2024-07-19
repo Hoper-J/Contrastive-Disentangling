@@ -144,7 +144,7 @@ def run(config):
         })
             
 
-        best_nmi = save_best_model(nmi_backbone, nmi_classifier, best_nmi, config, model)
+        best_nmi = save_best_model(nmi_backbone, nmi_classifier, best_nmi, config, model, wandb.run.name)
         records.update_best_metrics(nmi_backbone, ari_backbone, acc_backbone, nmi_classifier, ari_classifier, acc_classifier)
         
 
@@ -167,14 +167,14 @@ def run(config):
             save_checkpoint(model, optimizer, epoch, wandb.run.id, records, best_nmi, filename=checkpoint_path)
 
     records.save_csv(wandb.run.name)
-    move_model_to_finished(config, os.path.join('models', f'best_model_{wandb.run.name}.pth'))
+    move_model_to_finished(config, wandb.run.name)
     
     wandb.finish()
 
 
 config = {
     "dataset": "imagenet10",
-    "class_num": 100,
+    "class_num": 10,
     "batch_size": 128,
     "epochs": 1000,
     "learning_rate": 3e-4,
