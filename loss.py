@@ -54,8 +54,8 @@ class VarientialClusterLoss(nn.Module):
         self.similarity_f = nn.CosineSimilarity(dim=2)
         
     def mask_correlated_clusters(self, class_num):
-        N = 2 * class_num
-        mask = torch.ones((N, N), dtype=torch.bool)
+        K = 2 * class_num
+        mask = torch.ones((K, K), dtype=torch.bool)
         mask.fill_diagonal_(False)
         for i in range(class_num):
             mask[i, class_num + i] = False
@@ -63,8 +63,6 @@ class VarientialClusterLoss(nn.Module):
         return mask
 
     def forward(self, out_i, out_j):
-        
-        
         variational_loss = torch.tensor(0.0, device=self.device)
         if self.use_variational:
             c_i = out_i.predictive.probs 
@@ -88,19 +86,19 @@ class VarientialClusterLoss(nn.Module):
         
         c_i = c_i.t()
         c_j = c_j.t()
-        N = 2 * self.class_num
+        K = self.class_num * 2
         c = torch.cat((c_i, c_j), dim=0)
 
         sim = self.similarity_f(c.unsqueeze(1), c.unsqueeze(0)) / self.temperature
         sim_i_j = torch.diag(sim, self.class_num)
         sim_j_i = torch.diag(sim, -self.class_num)
 
-        positive_clusters = torch.cat((sim_i_j, sim_j_i), dim=0).reshape(N, 1)
-        negative_clusters = sim[self.mask].reshape(N, -1)
+        positive_clusters = torch.cat((sim_i_j, sim_j_i), dim=0).reshape(K, 1)
+        negative_clusters = sim[self.mask].reshape(K, -1)
 
-        labels = torch.zeros(N).to(positive_clusters.device).long()
+        labels = torch.zeros(K).to(positive_clusters.device).long()
         logits = torch.cat((positive_clusters, negative_clusters), dim=1)
         loss = self.criterion(logits, labels)
-        loss /= N
+        loss /= K
 
         return loss + ne_loss, variational_loss
