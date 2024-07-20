@@ -1,3 +1,6 @@
+import os
+import sys
+import pickle
 import torch
 from torch.utils.data import DataLoader, Dataset, random_split, ConcatDataset
 from torchvision import datasets, transforms
@@ -5,6 +8,7 @@ import numpy as np
 from torchvision.transforms import TrivialAugmentWide
 import cv2
 from PIL import Image
+
 
 class AugmentedDataset(Dataset):
     def __init__(self, dataset, augmentation_transform):
@@ -51,24 +55,22 @@ class GaussianBlur:
     
 def get_data_loader(dataset_name, batch_size, s=1.0,blur = True):
     dataset_mapping = {
-        'mnist': datasets.MNIST,
-        'fashion-mnist': datasets.FashionMNIST,
         'cifar10': datasets.CIFAR10,
+        'cifar100': CIFAR100,
         'imagenet10': datasets.ImageFolder
     }
 
     if dataset_name not in dataset_mapping:
         raise ValueError(f"Unsupported dataset: {dataset_name}")
 
-    if dataset_name == 'cifar10':
+    if dataset_name in ['cifar10', 'cifar100']:
         s=0.5
         blur = False
     dataset_class = dataset_mapping[dataset_name]
 
     base_transform = transforms.Compose([
         transforms.Resize(size=(224, 224)),
-        transforms.ToTensor(),
-        transforms.Lambda(lambda x: x.repeat(3, 1, 1)) if dataset_name in ['mnist', 'fashion-mnist'] else lambda x:x        
+        transforms.ToTensor(),   
     ])
 
     augmentation_transform = transforms.Compose([
@@ -80,7 +82,6 @@ def get_data_loader(dataset_name, batch_size, s=1.0,blur = True):
         
         GaussianBlur(kernel_size=23) if blur else lambda x: x,
         transforms.ToTensor(),
-        transforms.Lambda(lambda x: x.repeat(3, 1, 1)) if dataset_name in ['mnist', 'fashion-mnist'] else lambda x:x
     ])
     
     if dataset_name == 'imagenet10':
@@ -108,3 +109,67 @@ def get_data_loader(dataset_name, batch_size, s=1.0,blur = True):
     visualize_loader = DataLoader(transformed_vis_dataset, batch_size=batch_size, shuffle=False)
 
     return train_loader, test_loader, visualize_loader
+
+
+class CIFAR100(datasets.CIFAR10):
+    """CIFAR100 Dataset with 20 super-classes."""
+    
+    base_folder = 'cifar-100-python'
+    url = "https://www.cs.toronto.edu/~kriz/cifar-100-python.tar.gz"
+    filename = "cifar-100-python.tar.gz"
+    tgz_md5 = 'eb9058c3a382ffc7106e4002c42a8d85'
+    
+    train_list = [
+        ['train', '16019d7e3df5f24257cddd939b257f8d'],
+    ]
+
+    test_list = [
+        ['test', 'f0ef6b0ae62326f3e7ffdfab6717acfc'],
+    ]
+    
+    meta = {
+        'filename': 'meta',
+        'key': 'coarse_label_names',  # Change this to coarse_label_names
+        'md5': '7973b15100ade9c7d40fb424638fde48',
+    }
+
+    def __init__(self, *args, **kwargs):
+        super(CIFAR100, self).__init__(*args, **kwargs)
+        
+        # Determine which list to use based on train or test mode
+        downloaded_list = self.train_list if self.train else self.test_list
+        
+        # Initialize list to hold coarse labels
+        self.coarse_labels = []
+        
+        # Load coarse labels from the dataset
+        for file_name, checksum in downloaded_list:
+            file_path = os.path.join(self.root, self.base_folder, file_name)
+            with open(file_path, 'rb') as f:
+                if sys.version_info[0] == 2:
+                    entry = pickle.load(f)
+                else:
+                    entry = pickle.load(f, encoding='latin1')
+                self.coarse_labels.extend(entry['coarse_labels'])
+        
+        # Use 20 super-classes as ground-truth
+        self.targets = self.coarse_labels
+
+        # Load coarse class names
+        self._load_meta()
+
+    def _load_meta(self):
+        """Load the CIFAR-100 metadata."""
+        path = os.path.join(self.root, self.base_folder, self.meta['filename'])
+        if not os.path.isfile(path):
+            raise RuntimeError('Metadata file not found or corrupted.')
+        with open(path, 'rb') as infile:
+            if sys.version_info[0] == 2:
+                data = pickle.load(infile)
+            else:
+                data = pickle.load(infile, encoding='latin1')
+            self.classes = data[self.meta['key']]
+        
+        # Check if classes loaded correctly
+        if len(self.classes) != 20:
+            raise RuntimeError('Expected 20 super-classes, but got {}'.format(len(self.classes)))
