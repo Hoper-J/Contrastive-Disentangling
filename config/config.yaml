@@ -1,0 +1,28 @@
+common:
+  batch_size: 128            # Training batch size
+  epochs: 1000               # Number of training epochs
+  learning_rate: 0.0003      # Learning rate for the optimizer
+  backbone: ResNet34         # Backbone network architecture
+  instance: true             # Whether to use instance loss
+  cluster: true              # Whether to use clustering loss
+  variational: true          # Whether to use variational loss
+  checkpoint: true           # Whether to save checkpoints
+  reload: true               # Whether to reload from the last checkpoint
+  save_model: true           # Whether to save the model
+  project: CVC               # Project name for tracking
+  seed: 42                   # Random seed for reproducibility
+  var_weight: 0.5            # Variational weight, default is 0.5
+  weight_decay: 0            # Weight decay (L2 regularization), default is 0
+  feature_dim: 128           # Feature dimension
+  instance_temperature: 0.5  # Temperature for instance loss
+  cluster_temperature: 1.0   # Temperature for cluster loss
+
+
+datasets:
+  cifar10:
+    class_num: 10            # Number of classes for CIFAR-10
+  cifar100:
+    class_num: 20            # Number of classes for CIFAR-100
+    var_weight: 0.25
+  imagenet10:
+    class_num: 10            # Number of classes for ImageNet10

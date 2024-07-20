@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 from dataset import get_data_loader
 from loss import InstanceLoss, VarientialClusterLoss
 from modules.network import Network
-from utils.general_utils import set_seed, count_parameters, save_best_model, move_model_to_finished
+from utils.general_utils import load_config, set_seed, count_parameters, save_best_model, move_model_to_finished
 from utils.wandb_utils import init_wandb
 from utils.metrics import evaluate
 from utils.visualization import visualize_embeddings
@@ -41,8 +41,15 @@ def get_experiment_name(config):
         config["backbone"],
         "inst" if config["instance"] else "no inst",
         "cluster" if config["cluster"] else "nocluster",
-        "variational" if config["variational"] else "novariational", "weight1"
+        "variational" if config["variational"] else "novariational", 
     ]
+
+    if config["variational"] and config["var_weight"] != 0.5:
+        parts.append(f"weight{config['var_weight']}")
+
+    if config["weight_decay"] != 0:
+        parts.append(f"wd{config['weight_decay']}")
+        
     return "_".join(parts)
     
 
@@ -60,13 +67,13 @@ def run(config):
         device = torch.device('cpu')
         
     train_loader, test_loader, visualize_loader = get_data_loader(config["dataset"], config["batch_size"])
-    model = Network(config["backbone"], 10, config["batch_size"], 128, config["variational"]).to(device)
+    model = Network(config["backbone"], config['class_num'], config["batch_size"], config["feature_dim"], config["variational"]).to(device)
     print(f'The model has {count_parameters(model):,} trainable parameters.')
 
-    optimizer = optim.Adam(model.parameters(), lr=config["learning_rate"], weight_decay=0)
+    optimizer = optim.Adam(model.parameters(), lr=config["learning_rate"], weight_decay=config['weight_decay'])
 
-    instance_loss_fn = InstanceLoss(config["batch_size"], 0.5, device=device)
-    cluster_loss_fn = VarientialClusterLoss(10, 1, device=device, use_variational=config["variational"], var_weight=1)
+    instance_loss_fn = InstanceLoss(config["batch_size"], config["instance_temperature"], device=device)
+    cluster_loss_fn = VarientialClusterLoss(config['class_num'], config["cluster_temperature"], device=device, use_variational=config["variational"], var_weight=config['var_weight'])
 
     records = ExperimentRecords()
     best_nmi = 0.0
@@ -148,7 +155,7 @@ def run(config):
         records.update_best_metrics(nmi_backbone, ari_backbone, acc_backbone, nmi_classifier, ari_classifier, acc_classifier)
         
 
-        if (epoch) % 10 == 0 and config["class_num"] == 10:
+        if (epoch) % 10 == 0 and config["class_num"] in [10, 20]:
             visualize_embeddings(model, visualize_loader, device, epoch, wandb.run.name)
 
         if (epoch) % 100 == 0:
@@ -172,21 +179,13 @@ def run(config):
     wandb.finish()
 
 
-config = {
-    "dataset": "imagenet10",
-    "class_num": 10,
-    "batch_size": 128,
-    "epochs": 1000,
-    "learning_rate": 3e-4,
-    "backbone": "ResNet34",
-    "instance": True,
-    "cluster": True,
-    "variational": True,
-    "checkpoint": True,
-    "reload": True,
-    "save_model": True,
-    "project": "CVC",
-    "seed": 42,
-}
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Run experiment with specified dataset')
+    parser.add_argument('--dataset', type=str, required=True, help='Dataset name (e.g., cifar10, cifar100, imagenet10)')
+    args = parser.parse_args()
     
-run(config)
+    config_path = 'config/config.yaml'
+    config = load_config(config_path, args.dataset)
+    config["dataset"] = args.dataset
+    
+    run(config)

@@ -1,8 +1,18 @@
 import os
 import shutil
 import torch
+import yaml
 import numpy as np
 
+
+def load_config(config_path, dataset):
+    with open(config_path, 'r') as file:
+        config = yaml.safe_load(file)
+        common_config = config['common']
+        dataset_config = config['datasets'][dataset]
+        common_config.update(dataset_config)
+        return common_config
+        
 def set_seed(seed):
     """
     Set the seed for random number generators to ensure reproducibility.
