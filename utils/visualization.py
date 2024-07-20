@@ -39,30 +39,40 @@ def visualize_embeddings(model, loader, device, epoch, name):
     tsne = TSNE(n_components=2, random_state=0)
     tsne_results = tsne.fit_transform(embeddings_backbone)
 
-    plt.figure(figsize=(8, 8))
-    plt.scatter(tsne_results[:, 0], tsne_results[:, 1], c=labels, cmap='tab10', s=1)
-    plt.colorbar()
-    plt.title(f'Epoch {epoch} ({name})')
-    tsne_backbone_path = os.path.join('images', f'tsne_embeddings_backbone_epoch_{epoch}_{name}.png')
-    os.makedirs(os.path.dirname(tsne_backbone_path), exist_ok=True)
-    plt.savefig(tsne_backbone_path)
-    plt.close()
+    # Choose colormap based on number of classes
+    num_classes = len(np.unique(labels))
+    colormap = get_colormap(num_classes)
 
-    # TSNE for embeddings_classifier
-    tsne_classifier = TSNE(n_components=2, random_state=0)
-    tsne_classifier_results = tsne_classifier.fit_transform(embeddings_classifier)
+    # Plot t-SNE for backbone embeddings
+    tsne_results = TSNE(n_components=2, random_state=0).fit_transform(embeddings_backbone)
+    plot_tsne(tsne_results, labels, colormap, f'Epoch {epoch} ({name})', 'backbone', epoch, name)
 
-    plt.figure(figsize=(8, 8))
-    plt.scatter(tsne_classifier_results[:, 0], tsne_classifier_results[:, 1], c=labels, cmap='tab10', s=1)
-    plt.colorbar()
-    plt.title(f'Epoch {epoch} ({name})')
-    tsne_classifier_path = os.path.join('images', f'tsne_embeddings_classifier_epoch_{epoch}_{name}.png')
-    os.makedirs(os.path.dirname(tsne_classifier_path), exist_ok=True)
-    plt.savefig(tsne_classifier_path)
-    plt.close()
+    # Plot t-SNE for classifier embeddings
+    tsne_classifier_results = TSNE(n_components=2, random_state=0).fit_transform(embeddings_classifier)
+    plot_tsne(tsne_classifier_results, labels, colormap, f'Epoch {epoch} ({name})', 'classifier', epoch, name)
 
     wandb.log({
-        "TSNE_backbone": wandb.Image(tsne_backbone_path),
-        "TSNE_classifier": wandb.Image(tsne_classifier_path),
+        "TSNE_backbone": wandb.Image(f'images/tsne_embeddings_backbone_epoch_{epoch}_{name}.png'),
+        "TSNE_classifier": wandb.Image(f'images/tsne_embeddings_classifier_epoch_{epoch}_{name}.png'),
         "epoch": epoch
     })
+
+def get_colormap(num_classes):
+    """Return appropriate colormap based on number of classes."""
+    if num_classes <= 10:
+        return 'tab10'
+    elif num_classes <= 20:
+        return 'tab20'
+    else:
+        return 'viridis'  # or any other suitable colormap
+
+def plot_tsne(tsne_results, labels, colormap, title, embedding_type, epoch, name):
+    """Helper function to plot t-SNE results."""
+    plt.figure(figsize=(8, 8))
+    scatter = plt.scatter(tsne_results[:, 0], tsne_results[:, 1], c=labels, cmap=colormap, s=1)
+    plt.colorbar(scatter)
+    plt.title(title)
+    tsne_path = os.path.join('images', f'tsne_embeddings_{embedding_type}_epoch_{epoch}_{name}.png')
+    os.makedirs(os.path.dirname(tsne_path), exist_ok=True)
+    plt.savefig(tsne_path)
+    plt.close()
