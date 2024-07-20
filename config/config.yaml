@@ -16,6 +16,8 @@ common:
   feature_dim: 128           # Feature dimension
   instance_temperature: 0.5  # Temperature for instance loss
   cluster_temperature: 1.0   # Temperature for cluster loss
+  use_gradnorm: true         # Whether to use gradient clipping
+  max_norm: 1.0              # Maximum norm for gradient clipping
 
 
 datasets:

@@ -43,6 +43,9 @@ def get_experiment_name(config):
         "cluster" if config["cluster"] else "nocluster",
         "variational" if config["variational"] else "novariational", 
     ]
+    
+    if not config["use_gradnorm"]:
+        parts.append("nogradnorm")
 
     if config["variational"] and config["var_weight"] != 0.5:
         parts.append(f"weight{config['var_weight']}")
@@ -112,7 +115,8 @@ def run(config):
             variational_epoch_loss += variational_loss.item()
             epoch_loss += loss.item()
 
-            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+            if config["use_gradnorm"]:
+                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=config["max_norm"])
             optimizer.step()
 
             wandb.log({
@@ -155,7 +159,7 @@ def run(config):
         records.update_best_metrics(nmi_backbone, ari_backbone, acc_backbone, nmi_classifier, ari_classifier, acc_classifier)
         
 
-        if (epoch) % 10 == 0 and config["class_num"] in [10, 20]:
+        if (epoch) % 10 == 0 and config["class_num"] <= 20:
             visualize_embeddings(model, visualize_loader, device, epoch, wandb.run.name)
 
         if (epoch) % 100 == 0:
