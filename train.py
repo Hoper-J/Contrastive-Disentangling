@@ -69,7 +69,7 @@ def run(config):
     else:
         device = torch.device('cpu')
         
-    train_loader, test_loader, visualize_loader = get_data_loader(config["dataset"], config["batch_size"])
+    train_loader, test_loader, visualize_loader = get_data_loader(config)
     model = Network(config["backbone"], config['class_num'], config["batch_size"], config["feature_dim"], config["variational"]).to(device)
     print(f'The model has {count_parameters(model):,} trainable parameters.')
 

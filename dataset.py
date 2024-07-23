@@ -52,47 +52,48 @@ class GaussianBlur:
             sigma = (self.max - self.min) * np.random.random_sample() + self.min
             sample = cv2.GaussianBlur(sample, (self.kernel_size, self.kernel_size), sigma)
         return sample
-    
-def get_data_loader(dataset_name, batch_size, s=1.0,blur = True):
+
+
+def get_transforms(s, blur):
+    """
+    Get base and augmentation transforms based on the parameters.
+    """
+    base_transform = transforms.Compose([
+        transforms.Resize(size=(224, 224)),
+        transforms.ToTensor()
+    ])
+
+    augmentation_transform = transforms.Compose([
+        transforms.RandomResizedCrop(size=224),
+        transforms.RandomHorizontalFlip(),
+        transforms.RandomApply([transforms.ColorJitter(0.8 * s, 0.8 * s, 0.8 * s, 0.2 * s)], p=0.8),
+        transforms.RandomGrayscale(p=0.2),
+        GaussianBlur(kernel_size=23) if blur else transforms.Lambda(lambda x: x),
+        transforms.ToTensor()
+    ])
+
+    return base_transform, augmentation_transform
+
+def get_data_loader(config):
     dataset_mapping = {
         'cifar10': datasets.CIFAR10,
         'cifar100': CIFAR100,
         'imagenet10': datasets.ImageFolder
     }
 
+    dataset_name = config["dataset"]
     if dataset_name not in dataset_mapping:
         raise ValueError(f"Unsupported dataset: {dataset_name}")
 
-    if dataset_name in ['cifar10', 'cifar100']:
-        s=0.5
-        blur = False
     dataset_class = dataset_mapping[dataset_name]
+    base_transform, augmentation_transform = get_transforms(config['s'], config['blur'])
 
-    base_transform = transforms.Compose([
-        transforms.Resize(size=(224, 224)),
-        transforms.ToTensor(),   
-    ])
-
-    augmentation_transform = transforms.Compose([
-        transforms.RandomResizedCrop(size=224),
-        transforms.RandomHorizontalFlip(),
-        transforms.RandomApply([transforms.ColorJitter(0.8 * s, 0.8 * s, 0.8 * s, 0.2 * s)],
-                                p=0.8),
-        transforms.RandomGrayscale(p=0.2),
-        
-        GaussianBlur(kernel_size=23) if blur else lambda x: x,
-        transforms.ToTensor(),
-    ])
-    
     if dataset_name == 'imagenet10':
         train_dataset = dataset_class(root='data/imagenet-10', transform=None)
         test_dataset = dataset_class(root='data/imagenet-10', transform=None)
-        
-        
     else:
         train_dataset = dataset_class(root='./data', train=True, download=True, transform=None)
         test_dataset = dataset_class(root='./data', train=False, download=True, transform=None)
-
         dataset = ConcatDataset([train_dataset, test_dataset])
         train_dataset = dataset
         test_dataset = dataset
@@ -103,10 +104,10 @@ def get_data_loader(dataset_name, batch_size, s=1.0,blur = True):
     augmented_train_dataset = AugmentedDataset(train_dataset, augmentation_transform)
     transformed_vis_dataset = BaseTransformDataset(visualize_data, base_transform)
     transformed_test_dataset = BaseTransformDataset(test_dataset, base_transform)
-    
-    train_loader = DataLoader(augmented_train_dataset, batch_size=batch_size, shuffle=True, num_workers=4, drop_last=True)
-    test_loader = DataLoader(transformed_test_dataset, batch_size=batch_size, shuffle=False, num_workers=4, drop_last=True)
-    visualize_loader = DataLoader(transformed_vis_dataset, batch_size=batch_size, shuffle=False)
+
+    train_loader = DataLoader(augmented_train_dataset, batch_size=config["batch_size"], shuffle=True, num_workers=4, drop_last=True)
+    test_loader = DataLoader(transformed_test_dataset, batch_size=config["batch_size"], shuffle=False, num_workers=4, drop_last=True)
+    visualize_loader = DataLoader(transformed_vis_dataset, batch_size=config["batch_size"], shuffle=False)
 
     return train_loader, test_loader, visualize_loader
 

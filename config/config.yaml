@@ -23,8 +23,14 @@ common:
 datasets:
   cifar10:
     class_num: 10            # Number of classes for CIFAR-10
+    s: 0.5                   # Color jitter strength
+    blur: false              # Whether to apply Gaussian blur
   cifar100:
-    class_num: 20            # Number of classes for CIFAR-100
+    class_num: 20            
     var_weight: 0.25
+    s: 0.5                   
+    blur: false              
   imagenet10:
-    class_num: 10            # Number of classes for ImageNet10
+    class_num: 10            
+    s: 1.0                   
+    blur: true               
