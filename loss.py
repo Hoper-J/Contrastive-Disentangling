@@ -22,15 +22,15 @@ class InstanceLoss(nn.Module):
             mask[batch_size + i, i] = False
         return mask
 
-    def forward(self, z_i, z_j):
+    def forward(self, z1, z2):
         N = 2 * self.batch_size
-        z = torch.cat((z_i, z_j), dim=0)
+        z = torch.cat((z1, z2), dim=0)
     
         sim = torch.matmul(z, z.T) / self.temperature
-        sim_i_j = torch.diag(sim, self.batch_size)
-        sim_j_i = torch.diag(sim, -self.batch_size)
+        sim_1_2 = torch.diag(sim, self.batch_size)
+        sim_2_1 = torch.diag(sim, -self.batch_size)
         
-        positive_samples = torch.cat((sim_i_j, sim_j_i), dim=0).reshape(N, 1)
+        positive_samples = torch.cat((sim_1_2, sim_2_1), dim=0).reshape(N, 1)
         negative_samples = sim[self.mask].reshape(N, -1)
         
         labels = torch.zeros(N).to(positive_samples.device).long()
@@ -62,38 +62,40 @@ class VarientialClusterLoss(nn.Module):
             mask[class_num + i, i] = False
         return mask
 
-    def forward(self, out_i, out_j):
+    def forward(self, v1, v2):
         variational_loss = torch.tensor(0.0, device=self.device)
         if self.use_variational:
-            c_i = out_i.predictive.probs 
-            c_j = out_j.predictive.probs
-        
-            variational_loss_i = out_i.train_loss_fn(torch.argmax(out_j.logit_predictive.loc.detach(), dim=1))
-            variational_loss_j = out_j.train_loss_fn(torch.argmax(out_i.logit_predictive.loc.detach(), dim=1))
-            variational_loss = self.var_weight * (variational_loss_i + variational_loss_j) / 2
+            class_pred1 = torch.argmax(v1.logit_predictive.loc, dim=1)
+            class_pred2 = torch.argmax(v2.logit_predictive.loc, dim=1)
+            variational_loss1 = v1.train_loss_fn(class_pred2.detach())
+            variational_loss2 = v2.train_loss_fn(class_pred1.detach())
+            variational_loss = self.var_weight * (variational_loss1 + variational_loss2) / 2
+
+            c1 = v1.predictive.probs 
+            c2 = v2.predictive.probs
 
         else:
-            c_i = out_i
-            c_j = out_j
+            c1 = v1
+            c2 = v2
         
-        p_i = c_i.sum(0).view(-1)
-        p_i /= p_i.sum()
-        ne_i = math.log(p_i.size(0)) + (p_i * torch.log(p_i)).sum()
-        p_j = c_j.sum(0).view(-1)
-        p_j /= p_j.sum()
-        ne_j = math.log(p_j.size(0)) + (p_j * torch.log(p_j)).sum()
-        ne_loss = ne_i + ne_j
+        p1 = c1.sum(0).view(-1)
+        p1 /= p1.sum()
+        ne1 = math.log(p1.size(0)) + (p1 * torch.log(p1)).sum()
+        p2 = c2.sum(0).view(-1)
+        p2 /= p2.sum()
+        ne2 = math.log(p2.size(0)) + (p2 * torch.log(p2)).sum()
+        ne_loss = ne1 + ne2
         
-        c_i = c_i.t()
-        c_j = c_j.t()
+        c1 = c1.t()
+        c2 = c2.t()
         K = self.class_num * 2
-        c = torch.cat((c_i, c_j), dim=0)
+        c = torch.cat((c1, c2), dim=0)
 
         sim = self.similarity_f(c.unsqueeze(1), c.unsqueeze(0)) / self.temperature
-        sim_i_j = torch.diag(sim, self.class_num)
-        sim_j_i = torch.diag(sim, -self.class_num)
+        sim_1_2 = torch.diag(sim, self.class_num)
+        sim_2_1 = torch.diag(sim, -self.class_num)
 
-        positive_clusters = torch.cat((sim_i_j, sim_j_i), dim=0).reshape(K, 1)
+        positive_clusters = torch.cat((sim_1_2, sim_2_1), dim=0).reshape(K, 1)
         negative_clusters = sim[self.mask].reshape(K, -1)
 
         labels = torch.zeros(K).to(positive_clusters.device).long()

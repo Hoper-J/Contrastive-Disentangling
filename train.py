@@ -41,7 +41,7 @@ def get_experiment_name(config):
         config["backbone"],
         "inst" if config["instance"] else "no inst",
         "cluster" if config["cluster"] else "nocluster",
-        "variational" if config["variational"] else "novariational", 
+        "variational" if config["variational"] else "novariational",
     ]
     
     if not config["use_gradnorm"]:
@@ -97,17 +97,17 @@ def run(config):
         variational_epoch_loss = 0.0
         epoch_loss = 0.0
         progress_bar = tqdm(train_loader, desc=f'Epoch {epoch}')
-        for i, (x_i, x_j, _) in enumerate(progress_bar):
-            x_i, x_j = x_i.to(device), x_j.to(device)
+        for i, (x1, x2, _) in enumerate(progress_bar):
+            x1, x2 = x1.to(device), x2.to(device)
             
             optimizer.zero_grad()
 
-            z_i, z_j, out_i, out_j, entropy_loss = model(x_i, x_j)
+            z1, z2, v1, v2 = model(x1, x2)
 
-            instance_loss = instance_loss_fn(z_i, z_j)
-            cluster_loss, variational_loss = cluster_loss_fn(out_i, out_j)
+            instance_loss = instance_loss_fn(z1, z2)
+            cluster_loss, variational_loss = cluster_loss_fn(v1, v2)
                 
-            loss = instance_loss + cluster_loss + variational_loss #+ entropy_loss
+            loss = instance_loss + cluster_loss + variational_loss
             loss.backward()
             
             instance_epoch_loss += instance_loss.item()

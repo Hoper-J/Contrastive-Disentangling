@@ -33,30 +33,25 @@ class Network(nn.Module):
             )
         
 
-    def forward(self, x_i, x_j):
-        h_i = self.resnet(x_i)
-        h_j = self.resnet(x_j)
+    def forward(self, x1, x2):
+        h1 = self.resnet(x1)
+        h2 = self.resnet(x2)
 
-        z_i = normalize(self.instance_projector(h_i), dim=1)
-        z_j = normalize(self.instance_projector(h_j), dim=1)
+        z1 = normalize(self.instance_projector(h1), dim=1)
+        z2 = normalize(self.instance_projector(h2), dim=1)
         
-        out_i = self.class_projector(h_i)
-        out_j = self.class_projector(h_j)
+        v1 = self.class_projector(h1)
+        v2 = self.class_projector(h2)
 
         if self.use_variational:
-            c_i = out_i.predictive.probs 
-            c_j = out_j.predictive.probs
+            c1 = v1.predictive.probs 
+            c2 = v2.predictive.probs
         else:
-            c_i = out_i
-            c_j = out_j
+            c1 = v1
+            c2 = v2
         
-        entropy_loss = 0.5 * (self.entropy_regularization(c_i) + self.entropy_regularization(c_j))
+        return z1, z2, v1, v2
         
-        return z_i, z_j, out_i, out_j, entropy_loss
-    
-    def entropy_regularization(self, probs):
-        entropy = -torch.sum(probs * torch.log(probs + 1e-8), dim=1)
-        return torch.mean(entropy)
 
     def forward_cluster(self, x):
         f = self.resnet(x)
