@@ -46,3 +46,8 @@ datasets:
     class_num: 10            # Number of classes for ImageNet10
     s: 1.0                   # Color jitter strength
     blur: true               # Whether to apply Gaussian blur
+
+  tiny-imagenet:
+    class_num: 200
+    s: 0.5
+    blur: false

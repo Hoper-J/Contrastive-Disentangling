@@ -78,7 +78,8 @@ def get_data_loader(config):
     dataset_mapping = {
         'cifar10': datasets.CIFAR10,
         'cifar100': CIFAR100,
-        'imagenet10': datasets.ImageFolder
+        'imagenet10': datasets.ImageFolder,
+        'tiny-imagenet': datasets.ImageFolder,
     }
 
     dataset_name = config["dataset"]
@@ -91,6 +92,9 @@ def get_data_loader(config):
     if dataset_name == 'imagenet10':
         train_dataset = dataset_class(root='data/imagenet-10', transform=None)
         test_dataset = dataset_class(root='data/imagenet-10', transform=None)
+    elif dataset_name == 'tiny-imagenet':
+        train_dataset = dataset_class(root='data/tiny-imagenet-200/train', transform=None)
+        test_dataset = dataset_class(root='data/tiny-imagenet-200/train', transform=None)
     else:
         train_dataset = dataset_class(root='./data', train=True, download=True, transform=None)
         test_dataset = dataset_class(root='./data', train=False, download=True, transform=None)
