@@ -20,7 +20,9 @@ def init_wandb(config, experiment_name, run_id=None, metrics=DEFAULT_METRICS):
         wandb.init(project=config["project"], name=experiment_name, config=config, reinit=True)
         wandb.save("train.py")
         wandb.save("loss.py")
+        wandb.save("dataset.py")
         wandb.save("modules/network.py")
+        wandb.save("config/config.yaml")
     else:
         wandb.init(project=config["project"], name=experiment_name, id=run_id, resume="must", config=config, reinit=True)
 
