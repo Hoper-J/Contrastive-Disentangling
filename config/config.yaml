@@ -29,25 +29,29 @@ common:
   # Experiment settings
   project: CVC               # Project name for tracking
   seed: 42                   # Random seed for reproducibility
+  
+  # Augmentation settings
+  s: 1.0                     # Default color jitter strength
+  blur: false                # Default whether to apply Gaussian blur
 
 datasets:
   cifar10:
     class_num: 10            # Number of classes for CIFAR-10
-    s: 0.5                   # Color jitter strength
-    blur: false              # Whether to apply Gaussian blur
+    s: 0.5                   # Color jitter strength (overrides default)
     
   cifar100:
     class_num: 20            # Number of classes for CIFAR-100
     var_weight: 0.25         # Variational weight for CIFAR-100
-    s: 0.5                   # Color jitter strength
-    blur: false              # Whether to apply Gaussian blur
+    s: 0.5                   # Color jitter strength (overrides default)
     
   imagenet10:
     class_num: 10            # Number of classes for ImageNet10
-    s: 1.0                   # Color jitter strength
-    blur: true               # Whether to apply Gaussian blur
-
+    blur: true               # Whether to apply Gaussian blur (overrides default)
+    
   tiny-imagenet:
-    class_num: 200
-    s: 0.5
-    blur: false
+    class_num: 200           # Number of classes for Tiny ImageNet
+    var_weight: 0.25
+    s: 0.5                   # Color jitter strength (overrides default)
+    
+  stl10:
+    class_num: 10            # Number of classes for STL-10

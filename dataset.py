@@ -79,6 +79,7 @@ def get_data_loader(config):
         'cifar10': datasets.CIFAR10,
         'cifar100': CIFAR100,
         'imagenet10': datasets.ImageFolder,
+        'stl10': datasets.STL10,
         'tiny-imagenet': datasets.ImageFolder,
     }
 
@@ -96,8 +97,14 @@ def get_data_loader(config):
         train_dataset = dataset_class(root='data/tiny-imagenet-200/train', transform=None)
         test_dataset = dataset_class(root='data/tiny-imagenet-200/train', transform=None)
     else:
-        train_dataset = dataset_class(root='./data', train=True, download=True, transform=None)
-        test_dataset = dataset_class(root='./data', train=False, download=True, transform=None)
+        if dataset_name == 'stl10':
+            train_dataset = dataset_class(root='./data', split='train', download=True, transform=None)
+            test_dataset = dataset_class(root='./data', split='test', download=True, transform=None)
+        else:
+            train_dataset = dataset_class(root='./data', train=True, download=True, transform=None)
+            test_dataset = dataset_class(root='./data', train=False, download=True, transform=None)
+
+        # Concatenate train and test datasets
         dataset = ConcatDataset([train_dataset, test_dataset])
         train_dataset = dataset
         test_dataset = dataset
