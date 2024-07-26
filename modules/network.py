@@ -42,13 +42,6 @@ class Network(nn.Module):
         
         v1 = self.class_projector(h1)
         v2 = self.class_projector(h2)
-
-        if self.use_variational:
-            c1 = v1.predictive.probs 
-            c2 = v2.predictive.probs
-        else:
-            c1 = v1
-            c2 = v2
         
         return z1, z2, v1, v2
         
