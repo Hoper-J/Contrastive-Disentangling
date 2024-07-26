@@ -20,6 +20,7 @@ common:
   weight_decay: 0            # Weight decay (L2 regularization), default is 0
   use_gradnorm: true         # Whether to use gradient clipping
   max_norm: 1.0              # Maximum norm for gradient clipping
+  use_scheduler: true        # Whether to use a learning rate scheduler
   
   # Checkpoint settings
   checkpoint: true           # Whether to save checkpoints

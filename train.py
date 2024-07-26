@@ -43,12 +43,12 @@ def get_experiment_name(config):
         "cluster" if config["cluster"] else "nocluster",
         "variational" if config["variational"] else "novariational",
     ]
+
+    if config["use_scheduler"]:
+        parts.append("scheduler")
     
     if not config["use_gradnorm"]:
         parts.append("nogradnorm")
-
-    if config["variational"] and config["var_weight"] != 0.5:
-        parts.append(f"weight{config['var_weight']}")
 
     if config["weight_decay"] != 0:
         parts.append(f"wd{config['weight_decay']}")
@@ -74,6 +74,11 @@ def run(config):
     print(f'The model has {count_parameters(model):,} trainable parameters.')
 
     optimizer = optim.Adam(model.parameters(), lr=config["learning_rate"], weight_decay=config['weight_decay'])
+    
+    if config["use_scheduler"]:
+        scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=config["epochs"])
+    else:
+        scheduler = None
 
     instance_loss_fn = InstanceLoss(config["batch_size"], config["instance_temperature"], device=device)
     cluster_loss_fn = VarientialClusterLoss(config['class_num'], config["cluster_temperature"], device=device, use_variational=config["variational"], var_weight=config['var_weight'])
@@ -86,7 +91,7 @@ def run(config):
     checkpoint_path = f'checkpoints/{config["dataset"]}_checkpoint_{experiment_name}.pth.tar'
     
     if config["reload"] and os.path.exists(checkpoint_path):
-        start_epoch, run_id, best_nmi = load_checkpoint(model, optimizer, records, filename=checkpoint_path)
+        start_epoch, run_id, best_nmi = load_checkpoint(model, optimizer, records, filename=checkpoint_path, scheduler=scheduler)
         
     init_wandb(config, experiment_name, run_id)
         
@@ -128,7 +133,10 @@ def run(config):
             })
 
             progress_bar.set_postfix(batch_loss=epoch_loss / (i + 1))
-                
+        
+        if config["use_scheduler"]:
+            scheduler.step()
+
         avg_loss = epoch_loss / len(train_loader)
         avg_instance_loss = instance_epoch_loss / len(train_loader)
         avg_cluster_loss = cluster_epoch_loss / len(train_loader)
@@ -175,7 +183,7 @@ def run(config):
             records.log_current_metrics(current_metrics)
 
         if config["checkpoint"]:
-            save_checkpoint(model, optimizer, epoch, wandb.run.id, records, best_nmi, filename=checkpoint_path)
+            save_checkpoint(model, optimizer, epoch, wandb.run.id, records, best_nmi, scheduler, filename=checkpoint_path)
 
     records.save_csv(wandb.run.name)
     move_model_to_finished(config, wandb.run.name)
@@ -193,3 +201,4 @@ if __name__ == "__main__":
     config["dataset"] = args.dataset
     
     run(config)
+    
