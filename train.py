@@ -50,6 +50,9 @@ def get_experiment_name(config):
     if not config["use_gradnorm"]:
         parts.append("nogradnorm")
 
+    if config["variational"] and config["var_weight"] != 0.5:
+        parts.append(f"weight{config['var_weight']}")
+
     if config["weight_decay"] != 0:
         parts.append(f"wd{config['weight_decay']}")
         
