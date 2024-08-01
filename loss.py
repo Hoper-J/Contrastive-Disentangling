@@ -2,6 +2,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import math
+from torch.nn.functional import normalize
 
 class InstanceLoss(nn.Module):
     def __init__(self, batch_size, temperature, device):
@@ -101,9 +102,9 @@ class VarientialFeatureLoss(nn.Module):
         f1 = f1.t()
         f2 = f2.t()
         K = self.feature_num * 2
-        c = torch.cat((f1, f2), dim=0)
+        f = torch.cat((f1, f2), dim=0)
 
-        sim = self.similarity_f(c.unsqueeze(1), c.unsqueeze(0)) / self.temperature
+        sim = self.similarity_f(f.unsqueeze(1), f.unsqueeze(0)) / self.temperature
         sim_1_2 = torch.diag(sim, self.feature_num)
         sim_2_1 = torch.diag(sim, -self.feature_num)
 
