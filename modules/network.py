@@ -8,7 +8,7 @@ from vbll.layers.classification import DiscClassification
     
 
 class Network(nn.Module):
-    def __init__(self, backbone, class_num, batch_size, output_dim=128, use_variational=True):
+    def __init__(self, backbone, feature_num, batch_size, output_dim=128, use_variational=True):
         super(Network, self).__init__()
         self.resnet = get_resnet(backbone)
         self.use_variational = use_variational
@@ -19,16 +19,16 @@ class Network(nn.Module):
             nn.Linear(self.resnet.rep_dim, output_dim),
         )
         if self.use_variational:
-            self.class_projector = nn.Sequential(
-                nn.Linear(self.resnet.rep_dim, self.resnet.rep_dim),
+            self.feature_predictor = nn.Sequential(
+                nn.Linear(output_dim, self.resnet.rep_dim),
                 nn.ReLU(),
-                DiscClassification(self.resnet.rep_dim, class_num, 1. / (2 * batch_size), parameterization='diagonal', dof=1.)
+                DiscClassification(self.resnet.rep_dim, feature_num, 1. / (2 * batch_size), parameterization='diagonal', dof=1.)
             )
         else:
-            self.class_projector = nn.Sequential(
-                nn.Linear(self.resnet.rep_dim, self.resnet.rep_dim),
+            self.feature_predictor = nn.Sequential(
+                nn.Linear(output_dim, self.resnet.rep_dim),
                 nn.ReLU(),
-                nn.Linear(self.resnet.rep_dim, class_num),
+                nn.Linear(self.resnet.rep_dim, feature_num),
                 nn.Softmax(dim=1) 
             )
         
@@ -37,19 +37,19 @@ class Network(nn.Module):
         h1 = self.resnet(x1)
         h2 = self.resnet(x2)
 
-        z1 = normalize(self.instance_projector(h1), dim=1)
-        z2 = normalize(self.instance_projector(h2), dim=1)
+        z1 = self.instance_projector(h1)
+        z2 = self.instance_projector(h2), dim=1)
         
-        v1 = self.class_projector(h1)
-        v2 = self.class_projector(h2)
+        f1 = self.feature_predictor(z1)
+        f2 = self.feature_predictor(z2)
         
-        return z1, z2, v1, v2
+        return z1, z2, f1, f2
         
 
-    def forward_cluster(self, x):
-        f = self.resnet(x)
-        c = self.class_projector(f)
+    def extract_backbone_and_feature(self, x):
+        h = self.resnet(x)
+        z = normalize(self.instance_projector(h), dim=1)
+        f = self.feature_predictor(z)
         if self.use_variational:
-            c = c.logit_predictive.loc
-        c = torch.argmax(c, dim=1)
-        return c
+            f = f.logit_predictive.loc
+        return h, f

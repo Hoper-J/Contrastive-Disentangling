@@ -14,7 +14,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from dataset import get_data_loader
-from loss import InstanceLoss, VarientialClusterLoss
+from loss import InstanceLoss, VarientialFeatureLoss
 from modules.network import Network
 from utils.general_utils import load_config, set_seed, count_parameters, save_best_model, move_model_to_finished
 from utils.wandb_utils import init_wandb
@@ -41,7 +41,7 @@ def get_experiment_name(config):
         config["backbone"],
         "inst" if config["instance"] else "no inst",
         "cluster" if config["cluster"] else "nocluster",
-        "variational" if config["variational"] else "novariational",
+        "variational" if config["variational"] else "novariational", "inst2feature",
     ]
 
     if config["use_scheduler"]:
@@ -73,7 +73,7 @@ def run(config):
         device = torch.device('cpu')
         
     train_loader, test_loader, visualize_loader = get_data_loader(config)
-    model = Network(config["backbone"], config['class_num'], config["batch_size"], config["feature_dim"], config["variational"]).to(device)
+    model = Network(config["backbone"], config['feature_dim'], config["batch_size"], config["feature_dim"], config["variational"]).to(device)
     print(f'The model has {count_parameters(model):,} trainable parameters.')
 
     optimizer = optim.Adam(model.parameters(), lr=config["learning_rate"], weight_decay=config['weight_decay'])
@@ -84,7 +84,7 @@ def run(config):
         scheduler = None
 
     instance_loss_fn = InstanceLoss(config["batch_size"], config["instance_temperature"], device=device)
-    cluster_loss_fn = VarientialClusterLoss(config['class_num'], config["cluster_temperature"], device=device, use_variational=config["variational"], var_weight=config['var_weight'])
+    cluster_loss_fn = VarientialFeatureLoss(128, config["cluster_temperature"], device=device, use_variational=config["variational"], var_weight=config['var_weight'])
 
     records = ExperimentRecords()
     best_nmi = 0.0
@@ -110,10 +110,10 @@ def run(config):
             
             optimizer.zero_grad()
 
-            z1, z2, v1, v2 = model(x1, x2)
+            z1, z2, f1, f2 = model(x1, x2)
 
             instance_loss = instance_loss_fn(z1, z2)
-            cluster_loss, variational_loss = cluster_loss_fn(v1, v2)
+            cluster_loss, variational_loss = cluster_loss_fn(f1, f2)
                 
             loss = instance_loss + cluster_loss + variational_loss
             loss.backward()
