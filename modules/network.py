@@ -38,7 +38,7 @@ class Network(nn.Module):
         h2 = self.resnet(x2)
 
         z1 = self.instance_projector(h1)
-        z2 = self.instance_projector(h2), dim=1)
+        z2 = self.instance_projector(h2)
         
         f1 = self.feature_predictor(z1)
         f2 = self.feature_predictor(z2)
