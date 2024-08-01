@@ -5,6 +5,7 @@ from sklearn.manifold import TSNE
 import wandb
 import torch
 
+
 def visualize_embeddings(model, loader, device, epoch, name):
     """
     Visualize embeddings using t-SNE and log the visualization to wandb.
@@ -18,21 +19,17 @@ def visualize_embeddings(model, loader, device, epoch, name):
     """
     model.eval()
     embeddings_backbone = []
-    embeddings_classifier = []
+    embeddings_feature = []
     labels = []
     with torch.no_grad():
         for (x, y) in loader:
             x = x.to(device)
-            h = model.resnet(x)
-            if model.use_variational:
-                c = model.class_projector(h).logit_predictive.loc
-            else:
-                c = model.class_projector(h)
+            h, f = model.extract_backbone_and_feature(x)
             embeddings_backbone.append(h.cpu().numpy())
-            embeddings_classifier.append(c.cpu().numpy())
+            embeddings_feature.append(f.cpu().numpy())
             labels.append(y.numpy())
     embeddings_backbone = np.concatenate(embeddings_backbone, axis=0)
-    embeddings_classifier = np.concatenate(embeddings_classifier, axis=0)
+    embeddings_feature = np.concatenate(embeddings_feature, axis=0)
     labels = np.concatenate(labels, axis=0)
 
     # TSNE for embeddings_backbone
@@ -47,13 +44,13 @@ def visualize_embeddings(model, loader, device, epoch, name):
     tsne_results = TSNE(n_components=2, random_state=0).fit_transform(embeddings_backbone)
     plot_tsne(tsne_results, labels, colormap, f'Epoch {epoch} ({name})', 'backbone', epoch, name)
 
-    # Plot t-SNE for classifier embeddings
-    tsne_classifier_results = TSNE(n_components=2, random_state=0).fit_transform(embeddings_classifier)
-    plot_tsne(tsne_classifier_results, labels, colormap, f'Epoch {epoch} ({name})', 'classifier', epoch, name)
+    # Plot t-SNE for feature embeddings
+    tsne_feature_results = TSNE(n_components=2, random_state=0).fit_transform(embeddings_feature)
+    plot_tsne(tsne_feature_results, labels, colormap, f'Epoch {epoch} ({name})', 'feature', epoch, name)
 
     wandb.log({
         "TSNE_backbone": wandb.Image(f'images/tsne_embeddings_backbone_epoch_{epoch}_{name}.png'),
-        "TSNE_classifier": wandb.Image(f'images/tsne_embeddings_classifier_epoch_{epoch}_{name}.png'),
+        "TSNE_feature": wandb.Image(f'images/tsne_embeddings_feature_epoch_{epoch}_{name}.png'),
         "epoch": epoch
     })
 

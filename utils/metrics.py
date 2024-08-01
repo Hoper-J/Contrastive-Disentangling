@@ -17,42 +17,49 @@ def evaluate(model, loader, device):
     - nmi_backbone: NMI score for the backbone features.
     - ari_backbone: ARI score for the backbone features.
     - acc_backbone: ACC score for the backbone features.
-    - nmi_classifier: NMI score for the classifier outputs.
-    - ari_classifier: ARI score for the classifier outputs.
-    - acc_classifier: ACC score for the classifier outputs.
+    - nmi_feature: NMI score for the feature outputs.
+    - ari_feature: ARI score for the feature outputs.
+    - acc_feature: ACC score for the feature outputs.
     """
     model.eval()
     embeddings_backbone = []
-    embeddings_classifier = []
+    embeddings_feature = []
     labels = []
     with torch.no_grad():
         for (x, y) in loader:
             x = x.to(device)
-            h = model.resnet(x)
-            c = model.forward_cluster(x)
+            h, f = model.extract_backbone_and_feature(x)
             embeddings_backbone.append(h.cpu().numpy())
-            embeddings_classifier.append(c.cpu().numpy())
+            embeddings_feature.append(f.cpu().numpy())
             labels.append(y.numpy())
+
+    # Concatenate all the extracted features and labels
     embeddings_backbone = np.concatenate(embeddings_backbone, axis=0)
-    embeddings_classifier = np.concatenate(embeddings_classifier, axis=0)
+    embeddings_feature = np.concatenate(embeddings_feature, axis=0)
     labels = np.concatenate(labels, axis=0)
 
-    # 使用 K-means 聚类
+    # Use K-means clustering to obtain cluster labels for both backbone and feature outputs
     n_clusters = len(np.unique(labels))
     kmeans_backbone = KMeans(n_clusters=n_clusters, n_init=10, random_state=42).fit(embeddings_backbone)
-
-    # 计算 NMI 和 ARI
+    kmeans_feature = KMeans(n_clusters=n_clusters, n_init=10, random_state=42).fit(embeddings_feature)
+    
+    # Calculate NMI and ARI for backbone features
     nmi_backbone = metrics.normalized_mutual_info_score(labels, kmeans_backbone.labels_)
     ari_backbone = metrics.adjusted_rand_score(labels, kmeans_backbone.labels_)
 
-    nmi_classifier = metrics.normalized_mutual_info_score(labels, embeddings_classifier)
-    ari_classifier = metrics.adjusted_rand_score(labels, embeddings_classifier)
+    # Calculate NMI and ARI for feature head outputs
+    nmi_feature = metrics.normalized_mutual_info_score(labels, kmeans_feature.labels_)
+    ari_feature = metrics.adjusted_rand_score(labels, kmeans_feature.labels_)
 
-    # 计算 ACC
+    # Calculate ACC for backbone features
     acc_backbone = calculate_accuracy(labels, kmeans_backbone.labels_, n_clusters)
-    acc_classifier = calculate_accuracy(labels, embeddings_classifier, n_clusters)
 
-    return nmi_backbone, ari_backbone, acc_backbone, nmi_classifier, ari_classifier, acc_classifier
+    # Calculate ACC for feature head outputs
+    acc_feature = calculate_accuracy(labels, kmeans_feature.labels_, n_clusters)
+
+    # Return the calculated metrics
+    return nmi_backbone, ari_backbone, acc_backbone, nmi_feature, ari_feature, acc_feature
+
 
 def calculate_accuracy(true_labels, cluster_labels, num_classes):
     """
@@ -60,7 +67,7 @@ def calculate_accuracy(true_labels, cluster_labels, num_classes):
 
     Parameters:
     - true_labels: Ground truth labels.
-    - cluster_labels: Cluster labels predicted by the model.
+    - cluster_labels: Cluster labels obtained from K-means clustering.
     - num_classes: Number of unique classes.
 
     Returns:
