@@ -15,14 +15,22 @@ class InstanceLoss(nn.Module):
 
     def mask_correlated_samples(self, batch_size):
         N = 2 * batch_size
-        mask = torch.ones((N, N), dtype=torch.bool)
-        mask.fill_diagonal_(False)
-        for i in range(batch_size):
-            mask[i, batch_size + i] = False
-            mask[batch_size + i, i] = False
+        # Create a full matrix with False
+        mask = torch.eye(N, dtype=torch.bool).to(self.device)
+    
+        # Set the correlated samples to True
+        mask[:batch_size, batch_size:] = torch.eye(batch_size, dtype=torch.bool).to(self.device)
+        mask[batch_size:, :batch_size] = torch.eye(batch_size, dtype=torch.bool).to(self.device)
+    
+        # Invert mask for loss calculation (1s for negative samples)
+        mask = ~mask
         return mask
 
+
     def forward(self, z1, z2):
+        z1 = normalize(z1, dim=1)
+        z2 = normalize(z2, dim=1)
+        
         N = 2 * self.batch_size
         z = torch.cat((z1, z2), dim=0)
     
@@ -40,60 +48,64 @@ class InstanceLoss(nn.Module):
 
         return loss
     
-class VarientialClusterLoss(nn.Module):
-    def __init__(self, class_num, temperature, device, use_variational=True, var_weight=0.5):
-        super(VarientialClusterLoss, self).__init__()
-        self.class_num = class_num
+class VarientialFeatureLoss(nn.Module):
+    def __init__(self, feature_num, temperature, device, use_variational=True, var_weight=0.5):
+        super(VarientialFeatureLoss, self).__init__()
+        self.feature_num = feature_num
         self.temperature = temperature
         self.device = device
         self.use_variational = use_variational
         self.var_weight = var_weight
 
-        self.mask = self.mask_correlated_clusters(class_num)
+        self.mask = self.mask_correlated_features(feature_num)
         self.criterion = nn.CrossEntropyLoss(reduction="sum")
         self.similarity_f = nn.CosineSimilarity(dim=2)
         
-    def mask_correlated_clusters(self, class_num):
-        K = 2 * class_num
-        mask = torch.ones((K, K), dtype=torch.bool)
-        mask.fill_diagonal_(False)
-        for i in range(class_num):
-            mask[i, class_num + i] = False
-            mask[class_num + i, i] = False
+    def mask_correlated_features(self, feature_num):
+        K = 2 * feature_num
+        # Create a full matrix with False
+        mask = torch.eye(K, dtype=torch.bool).to(self.device)
+    
+        # Set the correlated features to True
+        mask[:feature_num, feature_num:] = torch.eye(feature_num, dtype=torch.bool).to(self.device)
+        mask[feature_num:, :feature_num] = torch.eye(feature_num, dtype=torch.bool).to(self.device)
+    
+        # Invert mask for loss calculation (1s for negative features)
+        mask = ~mask
         return mask
 
-    def forward(self, v1, v2):
+    def forward(self, f1, f2):
         variational_loss = torch.tensor(0.0, device=self.device)
         if self.use_variational:
-            class_pred1 = torch.argmax(v1.logit_predictive.loc, dim=1)
-            class_pred2 = torch.argmax(v2.logit_predictive.loc, dim=1)
-            variational_loss1 = v1.train_loss_fn(class_pred2.detach())
-            variational_loss2 = v2.train_loss_fn(class_pred1.detach())
+            feature_pred1 = torch.argmax(f1.logit_predictive.loc, dim=1)
+            feature_pred2 = torch.argmax(f2.logit_predictive.loc, dim=1)
+            variational_loss1 = f1.train_loss_fn(feature_pred2.detach())
+            variational_loss2 = f2.train_loss_fn(feature_pred1.detach())
             variational_loss = self.var_weight * (variational_loss1 + variational_loss2) / 2
 
-            c1 = v1.predictive.probs 
-            c2 = v2.predictive.probs
+            f1 = f1.predictive.probs 
+            f2 = f2.predictive.probs
 
         else:
-            c1 = v1
-            c2 = v2
+            f1 = f1
+            f2 = f2
         
-        p1 = c1.sum(0).view(-1)
+        p1 = f1.sum(0).view(-1)
         p1 /= p1.sum()
         ne1 = math.log(p1.size(0)) + (p1 * torch.log(p1)).sum()
-        p2 = c2.sum(0).view(-1)
+        p2 = f2.sum(0).view(-1)
         p2 /= p2.sum()
         ne2 = math.log(p2.size(0)) + (p2 * torch.log(p2)).sum()
         ne_loss = ne1 + ne2
         
-        c1 = c1.t()
-        c2 = c2.t()
-        K = self.class_num * 2
-        c = torch.cat((c1, c2), dim=0)
+        f1 = f1.t()
+        f2 = f2.t()
+        K = self.feature_num * 2
+        c = torch.cat((f1, f2), dim=0)
 
         sim = self.similarity_f(c.unsqueeze(1), c.unsqueeze(0)) / self.temperature
-        sim_1_2 = torch.diag(sim, self.class_num)
-        sim_2_1 = torch.diag(sim, -self.class_num)
+        sim_1_2 = torch.diag(sim, self.feature_num)
+        sim_2_1 = torch.diag(sim, -self.feature_num)
 
         positive_clusters = torch.cat((sim_1_2, sim_2_1), dim=0).reshape(K, 1)
         negative_clusters = sim[self.mask].reshape(K, -1)
