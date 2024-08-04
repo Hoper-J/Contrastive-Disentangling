@@ -24,12 +24,13 @@ def set_seed(seed):
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
 
-def get_experiment_name(config):
+def get_experiment_name(config, remark=""):
     """
     Generate a name for the experiment based on the configuration.
 
     Parameters:
     - config (dict): Configuration dictionary containing experiment settings.
+    - remark (str, optional): Additional remark or note to append to the experiment name.
 
     Returns:
     - str: Experiment name.
@@ -38,7 +39,7 @@ def get_experiment_name(config):
         f"bs{config['batch_size']}",
         # f"ep{config['epochs']}",
         f"lr{config['learning_rate']}",
-        config["backbone"],"test"
+        config["backbone"],
     ]
 
     if config["use_scheduler"]:
@@ -49,8 +50,13 @@ def get_experiment_name(config):
 
     if config["weight_decay"] != 0:
         parts.append(f"wd{config['weight_decay']}")
+
+    # Append the remark if provided
+    if remark:
+        parts.append(remark)
         
     return "_".join(parts)
+
     
 def count_parameters(model):
     """
