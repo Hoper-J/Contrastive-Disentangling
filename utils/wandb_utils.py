@@ -2,8 +2,8 @@ import wandb
 
 DEFAULT_METRICS = [
     "epoch_loss", "instance_epoch_loss", "cluster_epoch_loss",
-    "NMI_backbone", "ARI_backbone", "NMI_classifier", "ARI_classifier", 
-    "ACC_backbone", "ACC_classifier", "TSNE_backbone", "TSNE_classifier"
+    "NMI_backbone", "ARI_backbone", "NMI_feature", "ARI_feature", 
+    "ACC_backbone", "ACC_feature", "TSNE_backbone", "TSNE_feature"
 ]
 
 def init_wandb(config, experiment_name, run_id=None, metrics=DEFAULT_METRICS):

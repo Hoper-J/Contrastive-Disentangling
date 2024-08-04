@@ -4,7 +4,7 @@ import torch
 import yaml
 import numpy as np
 
-
+    
 def load_config(config_path, dataset):
     with open(config_path, 'r') as file:
         config = yaml.safe_load(file)
@@ -24,6 +24,34 @@ def set_seed(seed):
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
 
+def get_experiment_name(config):
+    """
+    Generate a name for the experiment based on the configuration.
+
+    Parameters:
+    - config (dict): Configuration dictionary containing experiment settings.
+
+    Returns:
+    - str: Experiment name.
+    """
+    parts = [
+        f"bs{config['batch_size']}",
+        # f"ep{config['epochs']}",
+        f"lr{config['learning_rate']}",
+        config["backbone"],"test"
+    ]
+
+    if config["use_scheduler"]:
+        parts.append("scheduler")
+    
+    if not config["use_gradnorm"]:
+        parts.append("nogradnorm")
+
+    if config["weight_decay"] != 0:
+        parts.append(f"wd{config['weight_decay']}")
+        
+    return "_".join(parts)
+    
 def count_parameters(model):
     """
     Calculate the number of trainable parameters in a model.

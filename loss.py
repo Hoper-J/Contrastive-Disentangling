@@ -49,14 +49,12 @@ class InstanceLoss(nn.Module):
 
         return loss
     
-class VarientialFeatureLoss(nn.Module):
-    def __init__(self, feature_num, temperature, device, use_variational=True, var_weight=0.5):
-        super(VarientialFeatureLoss, self).__init__()
+class FeatureLoss(nn.Module):
+    def __init__(self, feature_num, temperature, device):
+        super(FeatureLoss, self).__init__()
         self.feature_num = feature_num
         self.temperature = temperature
         self.device = device
-        self.use_variational = use_variational
-        self.var_weight = var_weight
 
         self.mask = self.mask_correlated_features(feature_num)
         self.criterion = nn.CrossEntropyLoss(reduction="sum")
@@ -76,21 +74,6 @@ class VarientialFeatureLoss(nn.Module):
         return mask
 
     def forward(self, f1, f2):
-        variational_loss = torch.tensor(0.0, device=self.device)
-        if self.use_variational:
-            feature_pred1 = torch.argmax(f1.logit_predictive.loc, dim=1)
-            feature_pred2 = torch.argmax(f2.logit_predictive.loc, dim=1)
-            variational_loss1 = f1.train_loss_fn(feature_pred2.detach())
-            variational_loss2 = f2.train_loss_fn(feature_pred1.detach())
-            variational_loss = self.var_weight * (variational_loss1 + variational_loss2) / 2
-
-            f1 = f1.predictive.probs 
-            f2 = f2.predictive.probs
-
-        else:
-            f1 = f1
-            f2 = f2
-        
         p1 = f1.sum(0).view(-1)
         p1 /= p1.sum()
         ne1 = math.log(p1.size(0)) + (p1 * torch.log(p1)).sum()
@@ -116,4 +99,4 @@ class VarientialFeatureLoss(nn.Module):
         loss = self.criterion(logits, labels)
         loss /= K
 
-        return loss + ne_loss, variational_loss
+        return loss + ne_loss

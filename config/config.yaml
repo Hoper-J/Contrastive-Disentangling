@@ -9,12 +9,8 @@ common:
   feature_dim: 128           # Feature dimension
   
   # Loss settings
-  instance: true             # Whether to use instance loss
-  cluster: true              # Whether to use clustering loss
-  variational: false          # Whether to use variational loss
-  var_weight: 0.5            # Variational weight, default is 0.5
   instance_temperature: 0.5  # Temperature for instance loss
-  cluster_temperature: 1.0   # Temperature for cluster loss
+  feature_temperature: 1.0   # Temperature for feature loss
   
   # Optimization settings
   weight_decay: 0            # Weight decay (L2 regularization), default is 0
@@ -28,7 +24,7 @@ common:
   save_model: true           # Whether to save the model
   
   # Experiment settings
-  project: CVC               # Project name for tracking
+  project: CFL               # Project name for tracking
   seed: 42                   # Random seed for reproducibility
   
   # Augmentation settings

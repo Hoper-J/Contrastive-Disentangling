@@ -43,21 +43,15 @@ def evaluate(model, loader, device):
     kmeans_backbone = KMeans(n_clusters=n_clusters, n_init=10, random_state=42).fit(embeddings_backbone)
     kmeans_feature = KMeans(n_clusters=n_clusters, n_init=10, random_state=42).fit(embeddings_feature)
     
-    # Calculate NMI and ARI for backbone features
+    # Calculate NMI, ARI and ACC
     nmi_backbone = metrics.normalized_mutual_info_score(labels, kmeans_backbone.labels_)
     ari_backbone = metrics.adjusted_rand_score(labels, kmeans_backbone.labels_)
-
-    # Calculate NMI and ARI for feature head outputs
-    nmi_feature = metrics.normalized_mutual_info_score(labels, kmeans_feature.labels_)
-    ari_feature = metrics.adjusted_rand_score(labels, kmeans_feature.labels_)
-
-    # Calculate ACC for backbone features
     acc_backbone = calculate_accuracy(labels, kmeans_backbone.labels_, n_clusters)
 
-    # Calculate ACC for feature head outputs
+    nmi_feature = metrics.normalized_mutual_info_score(labels, kmeans_feature.labels_)
+    ari_feature = metrics.adjusted_rand_score(labels, kmeans_feature.labels_)
     acc_feature = calculate_accuracy(labels, kmeans_feature.labels_, n_clusters)
 
-    # Return the calculated metrics
     return nmi_backbone, ari_backbone, acc_backbone, nmi_feature, ari_feature, acc_feature
 
 
