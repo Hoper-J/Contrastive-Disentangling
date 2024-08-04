@@ -7,7 +7,7 @@ from .resnet import get_resnet
     
 
 class Network(nn.Module):
-    def __init__(self, backbone, feature_num, batch_size, hidden_dim=128):
+    def __init__(self, backbone, feature_num=128, hidden_dim=128):
         super(Network, self).__init__()
         self.resnet = get_resnet(backbone)
         

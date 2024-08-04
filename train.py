@@ -38,7 +38,7 @@ def run(config):
         device = torch.device('cpu')
         
     train_loader, test_loader, visualize_loader = get_data_loader(config)
-    model = Network(config["backbone"], config['feature_dim'], config["batch_size"], config["feature_dim"]).to(device)
+    model = Network(config["backbone"], config['feature_num'], config["hidden_dim"]).to(device)
     print(f'The model has {count_parameters(model):,} trainable parameters.')
 
     optimizer = optim.Adam(model.parameters(), lr=config["learning_rate"], weight_decay=config['weight_decay'])

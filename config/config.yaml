@@ -7,7 +7,7 @@ common:
   # Model settings
   backbone: ResNet34         # Backbone network architecture
   hidden_dim: 128            # Hidden dimension size for the instance projector's output
-  feature_dim: 128           # Dimension size for the feature predictor's output
+  feature_num: 128           # Number of feature categories the feature predictor should predict
   
   # Loss settings
   instance_temperature: 0.5  # Temperature for instance loss, controls the sharpness of the distribution
