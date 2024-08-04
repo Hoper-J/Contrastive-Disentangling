@@ -6,48 +6,48 @@ common:
   
   # Model settings
   backbone: ResNet34         # Backbone network architecture
-  feature_dim: 128           # Feature dimension
+  hidden_dim: 128            # Hidden dimension size for the instance projector's output
+  feature_dim: 128           # Dimension size for the feature predictor's output
   
   # Loss settings
-  instance_temperature: 0.5  # Temperature for instance loss
-  feature_temperature: 1.0   # Temperature for feature loss
+  instance_temperature: 0.5  # Temperature for instance loss, controls the sharpness of the distribution
+  feature_temperature: 1.0   # Temperature for feature loss, controls the sharpness of the distribution
   
   # Optimization settings
-  weight_decay: 0            # Weight decay (L2 regularization), default is 0
-  use_gradnorm: true         # Whether to use gradient clipping
+  weight_decay: 0            # Weight decay (L2 regularization) factor to prevent overfitting
+  use_gradnorm: true         # Whether to use gradient clipping to prevent exploding gradients
   max_norm: 1.0              # Maximum norm for gradient clipping
-  use_scheduler: true        # Whether to use a learning rate scheduler
+  use_scheduler: true        # Whether to use a learning rate scheduler for dynamic learning rate adjustments
   
   # Checkpoint settings
-  checkpoint: true           # Whether to save checkpoints
-  reload: true               # Whether to reload from the last checkpoint
-  save_model: true           # Whether to save the model
+  checkpoint: true           # Whether to save checkpoints during training
+  reload: true               # Whether to reload from the last saved checkpoint if available
+  save_model: true           # Whether to save the final model after training
   
   # Experiment settings
-  project: CFL               # Project name for tracking
-  seed: 42                   # Random seed for reproducibility
+  project: CFL               # Project name for tracking experiments with WandB or other tools
+  seed: 42                   # Random seed for reproducibility of experiments
   
   # Augmentation settings
-  s: 1.0                     # Default color jitter strength
-  blur: false                # Default whether to apply Gaussian blur
+  s: 1.0                     # Default color jitter strength for data augmentation
+  blur: false                # Default setting for applying Gaussian blur as data augmentation
 
 datasets:
   cifar10:
-    class_num: 10            # Number of classes for CIFAR-10
-    s: 0.5                   # Color jitter strength (overrides default)
+    class_num: 10            # Number of classes for CIFAR-10 (used during evaluation/testing)
+    s: 0.5                   # Color jitter strength specific to CIFAR-10, overrides default
     
   cifar100:
-    class_num: 20            # Number of classes for CIFAR-100
-    var_weight: 0.25         # Variational weight for CIFAR-100
-    s: 0.5                   # Color jitter strength (overrides default)
+    class_num: 20            # Number of super-classes for CIFAR-100 (used during evaluation/testing)
+    s: 0.5                   # Color jitter strength specific to CIFAR-100, overrides default
     
   imagenet10:
-    class_num: 10            # Number of classes for ImageNet10
-    blur: true               # Whether to apply Gaussian blur (overrides default)
+    class_num: 10            # Number of classes for ImageNet10 (used during evaluation/testing)
+    blur: true               # Apply Gaussian blur specifically for ImageNet10, overrides default
     
   tiny-imagenet:
-    class_num: 200           # Number of classes for Tiny ImageNet
-    s: 0.5                   # Color jitter strength (overrides default)
+    class_num: 200           # Number of classes for Tiny ImageNet (used during evaluation/testing)
+    s: 0.5                   # Color jitter strength specific to Tiny ImageNet, overrides default
     
   stl10:
-    class_num: 10            # Number of classes for STL-10
+    class_num: 10            # Number of classes for STL-10 (used during evaluation/testing)
