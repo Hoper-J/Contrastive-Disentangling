@@ -49,7 +49,7 @@ def run(config):
         scheduler = None
 
     instance_loss_fn = InstanceLoss(config["batch_size"], config["instance_temperature"], device=device)
-    feature_loss_fn = FeatureLoss(128, config["feature_temperature"], device=device)
+    feature_loss_fn = FeatureLoss(config['feature_num'], config["feature_temperature"], device=device)
 
     records = ExperimentRecords()
     best_nmi = 0.0
