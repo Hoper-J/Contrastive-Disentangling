@@ -74,12 +74,14 @@ class FeatureLoss(nn.Module):
         return mask
 
     def forward(self, f1, f2):
+        epsilon = 1e-10
         p1 = f1.sum(0).view(-1)
-        p1 /= p1.sum()
-        ne1 = math.log(p1.size(0)) + (p1 * torch.log(p1)).sum()
+        p1 /= (p1.sum() + epsilon)
+        ne1 = math.log(p1.size(0)) + (p1 * torch.log(p1 + epsilon)).sum()
+
         p2 = f2.sum(0).view(-1)
-        p2 /= p2.sum()
-        ne2 = math.log(p2.size(0)) + (p2 * torch.log(p2)).sum()
+        p2 /= (p2.sum() + epsilon)
+        ne2 = math.log(p2.size(0)) + (p2 * torch.log(p2 + epsilon)).sum()
         ne_loss = ne1 + ne2
         
         f1 = f1.t()
