@@ -42,8 +42,8 @@ def get_experiment_name(config, remark=""):
         config["backbone"],
     ]
 
-    if config["use_scheduler"]:
-        parts.append("scheduler")
+    if not config["use_scheduler"]:
+        parts.append("noscheduler")
     
     if not config["use_gradnorm"]:
         parts.append("nogradnorm")
