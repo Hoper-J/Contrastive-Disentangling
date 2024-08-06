@@ -51,6 +51,9 @@ def get_experiment_name(config, remark=""):
     if config["weight_decay"] != 0:
         parts.append(f"wd{config['weight_decay']}")
 
+    if config["use_combined_datasets"]:
+        parts.append("combined")
+
     # Append the remark if provided
     if remark:
         parts.append(remark)

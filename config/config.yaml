@@ -31,6 +31,7 @@ common:
   # Augmentation settings
   s: 1.0                     # Default color jitter strength for data augmentation
   blur: false                # Default setting for applying Gaussian blur as data augmentation
+  use_combined_datasets: false  # Whether to combine multiple datasets into a single training dataset
 
 datasets:
   cifar10:

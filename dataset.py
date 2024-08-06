@@ -2,10 +2,9 @@ import os
 import sys
 import pickle
 import torch
-from torch.utils.data import DataLoader, Dataset, random_split, ConcatDataset
+from torch.utils.data import DataLoader, Dataset, ConcatDataset, Subset
 from torchvision import datasets, transforms
 import numpy as np
-from torchvision.transforms import TrivialAugmentWide
 import cv2
 from PIL import Image
 
@@ -74,43 +73,79 @@ def get_transforms(s, blur):
 
     return base_transform, augmentation_transform
 
-def get_data_loader(config):
+
+def load_dataset(dataset_name, root='./data', download=True, transform=None):
+    """
+    Load dataset based on the dataset name and return train and test datasets.
+    """
     dataset_mapping = {
-        'cifar10': datasets.CIFAR10,
-        'cifar100': CIFAR100,
-        'imagenet10': datasets.ImageFolder,
-        'stl10': datasets.STL10,
-        'tiny-imagenet': datasets.ImageFolder,
+        'cifar10': lambda: (
+            datasets.CIFAR10(root=root, train=True, download=download, transform=transform),
+            datasets.CIFAR10(root=root, train=False, download=download, transform=transform)
+        ),
+        'cifar100': lambda: (
+            CIFAR100(root=root, train=True, download=download, transform=transform),
+            CIFAR100(root=root, train=False, download=download, transform=transform)
+        ),
+        'imagenet10': lambda: (
+            datasets.ImageFolder(root='data/imagenet-10', transform=transform),
+            datasets.ImageFolder(root='data/imagenet-10', transform=transform)
+        ),
+        'stl10': lambda: (
+            datasets.STL10(root=root, split='train', download=download, transform=transform),
+            datasets.STL10(root=root, split='test', download=download, transform=transform)
+        ),
+        'tiny-imagenet': lambda: (
+            datasets.ImageFolder(root='data/tiny-imagenet-200/train', transform=transform),
+            datasets.ImageFolder(root='data/tiny-imagenet-200/train', transform=transform)
+        ),
     }
 
-    dataset_name = config["dataset"]
     if dataset_name not in dataset_mapping:
         raise ValueError(f"Unsupported dataset: {dataset_name}")
 
-    dataset_class = dataset_mapping[dataset_name]
+    return dataset_mapping[dataset_name]()
+
+
+def get_combined_datasets():
+    """
+    Combine multiple datasets into a single dataset.
+    """
+    cifar10_train, cifar10_test = load_dataset('cifar10')
+    cifar100_train, cifar100_test = load_dataset('cifar100')
+    imagenet10, _ = load_dataset('imagenet10')
+    stl10_train, stl10_test = load_dataset('stl10')
+
+    combined_dataset = ConcatDataset([
+        cifar10_train, cifar10_test,
+        cifar100_train, cifar100_test,
+        imagenet10,
+        stl10_train, stl10_test
+    ])
+
+    return combined_dataset
+
+
+def get_data_loader(config):
+    """
+    Get train, test, and visualization data loaders based on the config.
+    """
     base_transform, augmentation_transform = get_transforms(config['s'], config['blur'])
 
-    if dataset_name == 'imagenet10':
-        train_dataset = dataset_class(root='data/imagenet-10', transform=None)
-        test_dataset = dataset_class(root='data/imagenet-10', transform=None)
-    elif dataset_name == 'tiny-imagenet':
-        train_dataset = dataset_class(root='data/tiny-imagenet-200/train', transform=None)
-        test_dataset = dataset_class(root='data/tiny-imagenet-200/train', transform=None)
+    if config['use_combined_datasets']:
+        train_dataset = get_combined_datasets()
+        _, test_dataset = load_dataset(config["dataset"])
     else:
-        if dataset_name == 'stl10':
-            train_dataset = dataset_class(root='./data', split='train', download=True, transform=None)
-            test_dataset = dataset_class(root='./data', split='test', download=True, transform=None)
-        else:
-            train_dataset = dataset_class(root='./data', train=True, download=True, transform=None)
-            test_dataset = dataset_class(root='./data', train=False, download=True, transform=None)
+        train_dataset, test_dataset = load_dataset(config["dataset"])
 
         # Concatenate train and test datasets
         dataset = ConcatDataset([train_dataset, test_dataset])
         train_dataset = dataset
         test_dataset = dataset
 
+    # Subset for visualization
     visualize_indices = np.random.choice(len(test_dataset), 1000, replace=False)
-    visualize_data = torch.utils.data.Subset(test_dataset, visualize_indices)
+    visualize_data = Subset(test_dataset, visualize_indices)
 
     augmented_train_dataset = AugmentedDataset(train_dataset, augmentation_transform)
     transformed_vis_dataset = BaseTransformDataset(visualize_data, base_transform)
