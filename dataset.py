@@ -139,9 +139,10 @@ def get_data_loader(config):
         train_dataset, test_dataset = load_dataset(config["dataset"])
 
         # Concatenate train and test datasets
-        dataset = ConcatDataset([train_dataset, test_dataset])
-        train_dataset = dataset
-        test_dataset = dataset
+        if not config['dataset'] in ['imagenet10', 'tiny-imagenet']:
+            dataset = ConcatDataset([train_dataset, test_dataset])
+            train_dataset = dataset
+            test_dataset = dataset
 
     # Subset for visualization
     visualize_indices = np.random.choice(len(test_dataset), 1000, replace=False)
