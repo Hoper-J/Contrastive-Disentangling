@@ -93,6 +93,26 @@ def save_best_model(nmi_backbone, nmi_classifier, best_nmi, config, model, model
             print(f"Best model's NMI {best_nmi:.4f}")
     return best_nmi
 
+def save_model(model, dataset_name, epoch):
+    """
+    Save the model state dictionary to a file.
+
+    Parameters:
+    - model (nn.Module): The model to save.
+    - dataset_name (str): The name of the dataset (used for directory structure).
+    - epoch (int): The current epoch number (used in the filename).
+    """
+    # Create directory for models if it doesn't exist
+    model_dir = os.path.join("models", dataset_name)
+    os.makedirs(model_dir, exist_ok=True)
+
+    # Construct the model save path
+    model_path = os.path.join(model_dir, f"model_epoch_{epoch}.pth")
+
+    # Save the model state dictionary
+    torch.save(model.state_dict(), model_path)
+    print(f"Model saved to {model_path}")
+    
 def move_model_to_finished(cfg, model_name):
     """
     Move the saved model to the 'finished' folder.

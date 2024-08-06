@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 from dataset import get_data_loader
 from loss import InstanceLoss, FeatureLoss
 from modules.network import Network
-from utils.general_utils import load_config, set_seed, get_experiment_name, count_parameters, save_best_model, move_model_to_finished
+from utils.general_utils import load_config, set_seed, get_experiment_name, count_parameters, save_best_model, save_model, move_model_to_finished
 from utils.wandb_utils import init_wandb
 from utils.metrics import evaluate
 from utils.visualization import visualize_embeddings
@@ -130,6 +130,10 @@ def run(config):
         records.update_best_metrics(nmi_backbone, ari_backbone, acc_backbone, nmi_feature, ari_feature, acc_feature)
         
 
+        # Save the model every 100 epochs
+        if (epoch) % 100 == 0 and config['save_model']:
+            save_model(model, config['dataset'], epoch)
+            
         if (epoch) % 10 == 0 and config["class_num"] <= 20:
             visualize_embeddings(model, visualize_loader, device, epoch, wandb.run.name)
 
