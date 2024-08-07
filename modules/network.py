@@ -12,16 +12,16 @@ class Network(nn.Module):
         self.resnet = get_resnet(backbone)
         
         self.instance_projector = nn.Sequential(
-            nn.Linear(self.resnet.rep_dim, self.resnet.rep_dim),
+            nn.Linear(self.resnet.rep_dim, self.resnet.rep_dim, bias=False),
             nn.BatchNorm1d(self.resnet.rep_dim),
             nn.ReLU(),
             nn.Linear(self.resnet.rep_dim, hidden_dim),
         )
         self.feature_predictor = nn.Sequential(
-            nn.Linear(hidden_dim, self.resnet.rep_dim),
+            nn.Linear(hidden_dim, self.resnet.rep_dim, bias=False),
             nn.BatchNorm1d(self.resnet.rep_dim),
             nn.ReLU(),
-            nn.Linear(self.resnet.rep_dim, feature_num),
+            nn.Linear(self.resnet.rep_dim, feature_num, bias=False),
             nn.BatchNorm1d(feature_num),
             nn.Softmax(dim=1) 
         )
