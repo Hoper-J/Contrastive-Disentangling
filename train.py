@@ -26,7 +26,6 @@ from utils.checkpoint import save_checkpoint, load_checkpoint
 from utils.experiment_records import ExperimentRecords
 
 
-
 def run(config):
     """
     Run the training and evaluation loop for the specified configuration.
@@ -35,7 +34,7 @@ def run(config):
     - config (dict): Experiment configuration dictionary.
     """
     set_seed(config["seed"])
-    experiment_name = get_experiment_name(config, "test_ftemp0.5")
+    experiment_name = get_experiment_name(config)
     config["project"] = f"{config['project']}-{config['dataset']}"
     
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
