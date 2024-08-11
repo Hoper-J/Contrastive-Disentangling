@@ -12,7 +12,7 @@ class InstanceLoss(nn.Module):
         self.device = device
 
         self.mask = self.mask_correlated_samples(batch_size)
-        self.criterion = nn.CrossEntropyLoss(reduction="sum")
+        self.criterion = nn.CrossEntropyLoss(reduction="mean")
 
     def mask_correlated_samples(self, batch_size):
         N = 2 * batch_size
@@ -45,7 +45,6 @@ class InstanceLoss(nn.Module):
         labels = torch.zeros(N).to(positive_samples.device).long()
         logits = torch.cat((positive_samples, negative_samples), dim=1)
         loss = self.criterion(logits, labels)
-        loss /= N
 
         return loss
     
@@ -57,7 +56,7 @@ class FeatureLoss(nn.Module):
         self.device = device
 
         self.mask = self.mask_correlated_features(feature_num)
-        self.criterion = nn.CrossEntropyLoss(reduction="sum")
+        self.criterion = nn.CrossEntropyLoss(reduction="mean")
         self.similarity_f = nn.CosineSimilarity(dim=2)
         
     def mask_correlated_features(self, feature_num):
@@ -99,6 +98,5 @@ class FeatureLoss(nn.Module):
         labels = torch.zeros(K).to(positive_clusters.device).long()
         logits = torch.cat((positive_clusters, negative_clusters), dim=1)
         loss = self.criterion(logits, labels)
-        loss /= K
 
         return loss + ne_loss
