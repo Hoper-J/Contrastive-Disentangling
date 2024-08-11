@@ -21,6 +21,7 @@ class AugmentedDataset(Dataset):
         x, y = self.dataset[idx]
         x1 = self.augmentation_transform(x)
         x2 = self.augmentation_transform(x)
+        
         return x1, x2, y
 
     
@@ -35,6 +36,7 @@ class BaseTransformDataset(Dataset):
     def __getitem__(self, idx):
         x, y = self.dataset[idx]
         x = self.base_transform(x)
+        
         return x, y
     
     
@@ -50,6 +52,7 @@ class GaussianBlur:
         if prob < 0.5:
             sigma = (self.max - self.min) * np.random.random_sample() + self.min
             sample = cv2.GaussianBlur(sample, (self.kernel_size, self.kernel_size), sigma)
+            
         return sample
 
 

@@ -4,6 +4,7 @@ import torch.nn as nn
 import math
 from torch.nn.functional import normalize
 
+
 class InstanceLoss(nn.Module):
     def __init__(self, batch_size, temperature, device):
         super(InstanceLoss, self).__init__()
@@ -25,8 +26,8 @@ class InstanceLoss(nn.Module):
     
         # Invert mask for loss calculation (1s for negative samples)
         mask = ~mask
+        
         return mask
-
 
     def forward(self, z1, z2):
         z1 = normalize(z1, dim=1)
@@ -45,9 +46,10 @@ class InstanceLoss(nn.Module):
         labels = torch.zeros(N).to(positive_samples.device).long()
         logits = torch.cat((positive_samples, negative_samples), dim=1)
         loss = self.criterion(logits, labels)
-
+        
         return loss
-    
+
+
 class FeatureLoss(nn.Module):
     def __init__(self, feature_num, temperature, device):
         super(FeatureLoss, self).__init__()
@@ -58,7 +60,8 @@ class FeatureLoss(nn.Module):
         self.mask = self.mask_correlated_features(feature_num)
         self.criterion = nn.CrossEntropyLoss(reduction="mean")
         self.similarity_f = nn.CosineSimilarity(dim=2)
-        
+
+    
     def mask_correlated_features(self, feature_num):
         K = 2 * feature_num
         # Create a full matrix with False
@@ -70,18 +73,20 @@ class FeatureLoss(nn.Module):
     
         # Invert mask for loss calculation (1s for negative features)
         mask = ~mask
+        
         return mask
 
-    def forward(self, f1, f2):
-        epsilon = 1e-10
-        p1 = f1.sum(0).view(-1)
-        p1 /= (p1.sum() + epsilon)
-        ne1 = math.log(p1.size(0)) + (p1 * torch.log(p1 + epsilon)).sum()
+    def normalized_entropy_loss(self, predictions, epsilon=1e-12):
+        entropy = -predictions * torch.log(predictions + epsilon) - (1 - predictions) * torch.log(1 - predictions + epsilon)    
+        max_entropy = torch.log(torch.tensor(2.0))
+        normalized_entropy = entropy / max_entropy
+    
+        return torch.mean(normalized_entropy)
 
-        p2 = f2.sum(0).view(-1)
-        p2 /= (p2.sum() + epsilon)
-        ne2 = math.log(p2.size(0)) + (p2 * torch.log(p2 + epsilon)).sum()
-        ne_loss = ne1 + ne2
+    def forward(self, f1, f2):
+        ne1 = self.normalized_entropy_loss2(f1)
+        ne2 = self.normalized_entropy_loss2(f2)
+        neloss = (ne1 + ne2) / 2
         
         f1 = f1.t()
         f2 = f2.t()
@@ -98,5 +103,5 @@ class FeatureLoss(nn.Module):
         labels = torch.zeros(K).to(positive_clusters.device).long()
         logits = torch.cat((positive_clusters, negative_clusters), dim=1)
         loss = self.criterion(logits, labels)
-
-        return loss + ne_loss
+        
+        return loss - neloss

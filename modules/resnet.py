@@ -113,4 +113,5 @@ def get_resnet(name):
     }
     if name not in resnets.keys():
         raise KeyError(f"{name} is not a valid ResNet version")
+        
     return resnets[name]

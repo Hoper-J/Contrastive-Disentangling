@@ -72,4 +72,5 @@ def calculate_accuracy(true_labels, cluster_labels, num_classes):
 
     row_ind, col_ind = linear_sum_assignment(-confusion_matrix)
     accuracy = confusion_matrix[row_ind, col_ind].sum() / len(true_labels)
+    
     return accuracy

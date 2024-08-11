@@ -23,7 +23,7 @@ class Network(nn.Module):
             nn.ReLU(),
             nn.Linear(self.resnet.rep_dim, feature_num, bias=False),
             nn.BatchNorm1d(feature_num),
-            nn.Softmax(dim=1) 
+            nn.Sigmoid() 
         )
         
 
@@ -44,4 +44,5 @@ class Network(nn.Module):
         h = self.resnet(x)
         z = self.instance_projector(h)
         f = self.feature_predictor(z)
+        
         return h, f
