@@ -1,6 +1,7 @@
 import os
 import torch
 
+
 def save_checkpoint(model, optimizer, epoch, run_id, records, best_nmi, scheduler=None, filename='checkpoint.pth.tar'):
     """
     Save the model checkpoint along with the records.
@@ -22,15 +23,16 @@ def save_checkpoint(model, optimizer, epoch, run_id, records, best_nmi, schedule
         'state_dict': model.state_dict(),
         'optimizer': optimizer.state_dict(),
         'run_id': run_id,
-        'records': records.records,  # Save the records state
-        'best_metrics': records.best_metrics,  # Save the best metrics
-        'best_nmi': best_nmi  # Save the best NMI score
+        'records': records.records,
+        'best_metrics': records.best_metrics,
+        'best_nmi': best_nmi
     }
     
     if scheduler:
         state['scheduler'] = scheduler.state_dict()
     
     torch.save(state, filename)
+
 
 def load_checkpoint(model, optimizer, records, filename='checkpoint.pth.tar', scheduler=None):
     """
@@ -48,12 +50,15 @@ def load_checkpoint(model, optimizer, records, filename='checkpoint.pth.tar', sc
     - run_id: The run ID for the experiment.
     - best_nmi: The best NMI score so far.
     """
+    if not os.path.isfile(filename):
+        raise FileNotFoundError(f"Checkpoint file '{filename}' not found.")
+
     checkpoint = torch.load(filename)
     model.load_state_dict(checkpoint['state_dict'])
     optimizer.load_state_dict(checkpoint['optimizer'])
-    records.records = checkpoint.get('records', records.records)  # Load the records state
-    records.best_metrics = checkpoint.get('best_metrics', records.best_metrics)  # Load the best metrics
-    best_nmi = checkpoint.get('best_nmi', 0.0)  # Load the best NMI score
+    records.records = checkpoint.get('records', records.records)
+    records.best_metrics = checkpoint.get('best_metrics', records.best_metrics)
+    best_nmi = checkpoint.get('best_nmi', 0.0)
     start_epoch = checkpoint['epoch'] + 1
     run_id = checkpoint.get('run_id', None)
     

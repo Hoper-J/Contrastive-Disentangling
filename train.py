@@ -1,41 +1,46 @@
 import os
-import shutil
 import argparse
 
 import numpy as np
 import torch
-import torch.nn as nn
 import torch.optim as optim
-import torch.nn.functional as F
 from tqdm import tqdm
-
 import wandb
-import pandas as pd
-import matplotlib.pyplot as plt
 
 from dataset import get_data_loader
 from loss import InstanceLoss, FeatureLoss
 from modules.network import Network
-from utils.general_utils import load_config, set_seed, get_experiment_name, count_parameters, save_best_model, save_model, move_model_to_finished
+from utils.general_utils import (
+    load_config, 
+    set_seed, 
+    get_experiment_name, 
+    count_parameters, 
+    save_best_model, 
+    save_model, 
+    move_model_to_finished
+)
 from utils.wandb_utils import init_wandb
 from utils.metrics import evaluate
 from utils.visualization import visualize_embeddings
 from utils.checkpoint import save_checkpoint, load_checkpoint
 from utils.experiment_records import ExperimentRecords
-    
+
+
 
 def run(config):
+    """
+    Run the training and evaluation loop for the specified configuration.
+    
+    Parameters:
+    - config (dict): Experiment configuration dictionary.
+    """
     set_seed(config["seed"])
-    experiment_name = get_experiment_name(config)
+    experiment_name = get_experiment_name(config, "test_ftemp0.5")
     config["project"] = f"{config['project']}-{config['dataset']}"
     
-    if torch.cuda.is_available():
-        device = torch.device('cuda')
-    # Check if 'mps' backend is available for Apple Silicon support
-    elif hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    if device == torch.device('cpu') and hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():  # Check if 'mps' backend is available for Apple Silicon support
         device = torch.device('mps')
-    else:
-        device = torch.device('cpu')
         
     train_loader, test_loader, visualize_loader = get_data_loader(config)
     model = Network(config["backbone"], config['feature_num'], config["hidden_dim"]).to(device)
@@ -43,10 +48,7 @@ def run(config):
 
     optimizer = optim.Adam(model.parameters(), lr=config["learning_rate"], weight_decay=config['weight_decay'])
     
-    if config["use_scheduler"]:
-        scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=config["epochs"])
-    else:
-        scheduler = None
+    scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=config["epochs"]) if config["use_scheduler"] else None
 
     instance_loss_fn = InstanceLoss(config["batch_size"], config["instance_temperature"], device=device)
     feature_loss_fn = FeatureLoss(config['feature_num'], config["feature_temperature"], device=device)
@@ -54,8 +56,7 @@ def run(config):
     records = ExperimentRecords()
     best_nmi = 0.0
     
-    start_epoch = 1
-    run_id = None
+    start_epoch, run_id = 1, None
     checkpoint_path = f'checkpoints/{config["dataset"]}_checkpoint_{experiment_name}.pth.tar'
     
     if config["reload"] and os.path.exists(checkpoint_path):
@@ -63,15 +64,13 @@ def run(config):
         
     init_wandb(config, experiment_name, run_id)
         
-    for epoch in range(start_epoch, config["epochs"]+1):
+    for epoch in range(start_epoch, config["epochs"] + 1):
         model.train()
-        instance_epoch_loss = 0.0
-        feature_epoch_loss = 0.0
-        epoch_loss = 0.0
+        instance_epoch_loss = feature_epoch_loss = epoch_loss = 0.0
         progress_bar = tqdm(train_loader, desc=f'Epoch {epoch}')
+        
         for i, (x1, x2, _) in enumerate(progress_bar):
             x1, x2 = x1.to(device), x2.to(device)
-            
             optimizer.zero_grad()
 
             z1, z2, f1, f2 = model(x1, x2)
@@ -99,7 +98,7 @@ def run(config):
 
             progress_bar.set_postfix(batch_loss=epoch_loss / (i + 1))
         
-        if config["use_scheduler"]:
+        if scheduler:
             scheduler.step()
 
         avg_loss = epoch_loss / len(train_loader)
@@ -131,13 +130,13 @@ def run(config):
         
 
         # Save the model every 100 epochs
-        if (epoch) % 100 == 0 and config['save_model']:
+        if (epoch % 100 == 0) and config['save_model']:
             save_model(model, config['dataset'], epoch)
             
-        if (epoch) % 10 == 0 and config["class_num"] <= 20:
+        if (epoch % 10 == 0) and config["class_num"] <= 20:
             visualize_embeddings(model, visualize_loader, device, epoch, wandb.run.name)
 
-        if (epoch) % 100 == 0:
+        if epoch % 100 == 0:
             current_metrics = {
                 "nmi_backbone": nmi_backbone,
                 "ari_backbone": ari_backbone,
@@ -168,4 +167,3 @@ if __name__ == "__main__":
     config["dataset"] = args.dataset
     
     run(config)
-    

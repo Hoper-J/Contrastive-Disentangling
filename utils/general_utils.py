@@ -1,10 +1,11 @@
 import os
 import shutil
+
 import torch
 import yaml
 import numpy as np
 
-    
+
 def load_config(config_path, dataset):
     with open(config_path, 'r') as file:
         config = yaml.safe_load(file)
@@ -12,7 +13,8 @@ def load_config(config_path, dataset):
         dataset_config = config['datasets'][dataset]
         common_config.update(dataset_config)
         return common_config
-        
+
+
 def set_seed(seed):
     """
     Set the seed for random number generators to ensure reproducibility.
@@ -23,6 +25,7 @@ def set_seed(seed):
     np.random.seed(seed)
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
+
 
 def get_experiment_name(config, remark=""):
     """
@@ -60,12 +63,13 @@ def get_experiment_name(config, remark=""):
         
     return "_".join(parts)
 
-    
+
 def count_parameters(model):
     """
     Calculate the number of trainable parameters in a model.
     """
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
+
 
 def save_best_model(nmi_backbone, nmi_classifier, best_nmi, config, model, model_name):
     """
@@ -93,6 +97,7 @@ def save_best_model(nmi_backbone, nmi_classifier, best_nmi, config, model, model
             print(f"Best model's NMI {best_nmi:.4f}")
     return best_nmi
 
+
 def save_model(model, dataset_name, epoch):
     """
     Save the model state dictionary to a file.
@@ -102,17 +107,14 @@ def save_model(model, dataset_name, epoch):
     - dataset_name (str): The name of the dataset (used for directory structure).
     - epoch (int): The current epoch number (used in the filename).
     """
-    # Create directory for models if it doesn't exist
     model_dir = os.path.join("models", dataset_name)
     os.makedirs(model_dir, exist_ok=True)
 
-    # Construct the model save path
     model_path = os.path.join(model_dir, f"model_epoch_{epoch}.pth")
-
-    # Save the model state dictionary
     torch.save(model.state_dict(), model_path)
     print(f"Model saved to {model_path}")
-    
+
+
 def move_model_to_finished(cfg, model_name):
     """
     Move the saved model to the 'finished' folder.
@@ -124,9 +126,6 @@ def move_model_to_finished(cfg, model_name):
     if cfg["save_model"]:
         best_model_path = os.path.join('models', f'best_model_{model_name}.pth')
         finished_model_path = os.path.join('models', 'finished', os.path.basename(best_model_path))
-        print(best_model_path, finished_model_path)
         os.makedirs(os.path.dirname(finished_model_path), exist_ok=True)
         shutil.move(best_model_path, finished_model_path)
         print(f"Moved best model to {finished_model_path}")
-
-

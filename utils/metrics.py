@@ -4,6 +4,7 @@ from sklearn import metrics
 from sklearn.cluster import KMeans
 from scipy.optimize import linear_sum_assignment
 
+
 def evaluate(model, loader, device):
     """
     Evaluate the model on a dataset.
@@ -25,6 +26,7 @@ def evaluate(model, loader, device):
     embeddings_backbone = []
     embeddings_feature = []
     labels = []
+
     with torch.no_grad():
         for (x, y) in loader:
             x = x.to(device)
@@ -43,7 +45,7 @@ def evaluate(model, loader, device):
     kmeans_backbone = KMeans(n_clusters=n_clusters, n_init=10, random_state=42).fit(embeddings_backbone)
     kmeans_feature = KMeans(n_clusters=n_clusters, n_init=10, random_state=42).fit(embeddings_feature)
     
-    # Calculate NMI, ARI and ACC
+    # Calculate NMI, ARI, and ACC
     nmi_backbone = metrics.normalized_mutual_info_score(labels, kmeans_backbone.labels_)
     ari_backbone = metrics.adjusted_rand_score(labels, kmeans_backbone.labels_)
     acc_backbone = calculate_accuracy(labels, kmeans_backbone.labels_, n_clusters)

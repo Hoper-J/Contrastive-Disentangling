@@ -1,9 +1,10 @@
 import os
+
 import matplotlib.pyplot as plt
 import numpy as np
+import torch
 from sklearn.manifold import TSNE
 import wandb
-import torch
 
 
 def visualize_embeddings(model, loader, device, epoch, name):
@@ -21,6 +22,7 @@ def visualize_embeddings(model, loader, device, epoch, name):
     embeddings_backbone = []
     embeddings_feature = []
     labels = []
+
     with torch.no_grad():
         for (x, y) in loader:
             x = x.to(device)
@@ -28,6 +30,7 @@ def visualize_embeddings(model, loader, device, epoch, name):
             embeddings_backbone.append(h.cpu().numpy())
             embeddings_feature.append(f.cpu().numpy())
             labels.append(y.numpy())
+
     embeddings_backbone = np.concatenate(embeddings_backbone, axis=0)
     embeddings_feature = np.concatenate(embeddings_feature, axis=0)
     labels = np.concatenate(labels, axis=0)
@@ -54,6 +57,7 @@ def visualize_embeddings(model, loader, device, epoch, name):
         "epoch": epoch
     })
 
+
 def get_colormap(num_classes):
     """Return appropriate colormap based on number of classes."""
     if num_classes <= 10:
@@ -63,11 +67,12 @@ def get_colormap(num_classes):
     else:
         return 'viridis'  # or any other suitable colormap
 
+
 def plot_tsne(tsne_results, labels, colormap, title, embedding_type, epoch, name):
     """Helper function to plot t-SNE results."""
     plt.figure(figsize=(8, 8))
-    scatter = plt.scatter(tsne_results[:, 0], tsne_results[:, 1], c=labels, cmap=colormap, s=1)
-    plt.colorbar(scatter)
+    scatter_plot = plt.scatter(tsne_results[:, 0], tsne_results[:, 1], c=labels, cmap=colormap, s=1)
+    plt.colorbar(scatter_plot)
     plt.title(title)
     tsne_path = os.path.join('images', f'tsne_embeddings_{embedding_type}_epoch_{epoch}_{name}.png')
     os.makedirs(os.path.dirname(tsne_path), exist_ok=True)

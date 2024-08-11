@@ -1,12 +1,13 @@
 import os
 import sys
 import pickle
-import torch
-from torch.utils.data import DataLoader, Dataset, ConcatDataset, Subset
-from torchvision import datasets, transforms
 import numpy as np
 import cv2
 from PIL import Image
+
+import torch
+from torch.utils.data import DataLoader, Dataset, ConcatDataset, Subset
+from torchvision import datasets, transforms
 
 
 class AugmentedDataset(Dataset):
@@ -21,10 +22,9 @@ class AugmentedDataset(Dataset):
         x, y = self.dataset[idx]
         x1 = self.augmentation_transform(x)
         x2 = self.augmentation_transform(x)
-        
         return x1, x2, y
 
-    
+
 class BaseTransformDataset(Dataset):
     def __init__(self, dataset, base_transform):
         self.dataset = dataset
@@ -36,10 +36,9 @@ class BaseTransformDataset(Dataset):
     def __getitem__(self, idx):
         x, y = self.dataset[idx]
         x = self.base_transform(x)
-        
         return x, y
-    
-    
+
+
 class GaussianBlur:
     def __init__(self, kernel_size, min=0.1, max=2.0):
         self.min = min
@@ -52,7 +51,6 @@ class GaussianBlur:
         if prob < 0.5:
             sigma = (self.max - self.min) * np.random.random_sample() + self.min
             sample = cv2.GaussianBlur(sample, (self.kernel_size, self.kernel_size), sigma)
-            
         return sample
 
 
@@ -142,7 +140,7 @@ def get_data_loader(config):
         train_dataset, test_dataset = load_dataset(config["dataset"])
 
         # Concatenate train and test datasets
-        if not config['dataset'] in ['imagenet10', 'tiny-imagenet']:
+        if config['dataset'] not in ['imagenet10', 'tiny-imagenet']:
             dataset = ConcatDataset([train_dataset, test_dataset])
             train_dataset = dataset
             test_dataset = dataset
@@ -223,4 +221,4 @@ class CIFAR100(datasets.CIFAR10):
         
         # Check if classes loaded correctly
         if len(self.classes) != 20:
-            raise RuntimeError('Expected 20 super-classes, but got {}'.format(len(self.classes)))
+            raise RuntimeError(f'Expected 20 super-classes, but got {len(self.classes)}.')
