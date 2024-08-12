@@ -15,27 +15,25 @@ class InstanceLoss(nn.Module):
         - device: The device on which the computations are performed.
         """
         super(InstanceLoss, self).__init__()
+        
         self.batch_size = batch_size
         self.temperature = temperature
         self.device = device
-
-        self.mask = self._mask_correlated_samples(batch_size)
+        
+        self.N = 2 * batch_size
+        self.mask = self._mask_correlated_samples()
         self.criterion = nn.CrossEntropyLoss(reduction="mean")
 
-    def _mask_correlated_samples(self, batch_size):
+    def _mask_correlated_samples(self):
         """
         Create a mask to exclude correlated samples from the loss calculation.
-
-        Parameters:
-        - batch_size: Size of the batch.
 
         Returns:
         - mask: Boolean mask excluding correlated samples.
         """
-        N = 2 * batch_size
-        mask = torch.eye(N, dtype=torch.bool).to(self.device)
-        mask[:batch_size, batch_size:] = torch.eye(batch_size, dtype=torch.bool).to(self.device)
-        mask[batch_size:, :batch_size] = torch.eye(batch_size, dtype=torch.bool).to(self.device)
+        mask = torch.eye(self.N, dtype=torch.bool).to(self.device)
+        mask[:self.batch_size, self.batch_size:] = torch.eye(self.batch_size, dtype=torch.bool).to(self.device)
+        mask[self.batch_size:, :self.batch_size] = torch.eye(self.batch_size, dtype=torch.bool).to(self.device)
         mask = ~mask
         return mask
 
@@ -53,14 +51,13 @@ class InstanceLoss(nn.Module):
         z1 = normalize(z1, dim=1)
         z2 = normalize(z2, dim=1)
         
-        N = 2 * self.batch_size
         z = torch.cat((z1, z2), dim=0)
     
         sim = torch.matmul(z, z.T) / self.temperature
-        positive_samples = torch.cat((torch.diag(sim, self.batch_size), torch.diag(sim, -self.batch_size)), dim=0).reshape(N, 1)
-        negative_samples = sim[self.mask].reshape(N, -1)
+        positive_samples = torch.cat((torch.diag(sim, self.batch_size), torch.diag(sim, -self.batch_size)), dim=0).reshape(self.N, 1)
+        negative_samples = sim[self.mask].reshape(self.N, -1)
         
-        labels = torch.zeros(N).to(positive_samples.device).long()
+        labels = torch.zeros(self.N).to(positive_samples.device).long()
         logits = torch.cat((positive_samples, negative_samples), dim=1)
         loss = self.criterion(logits, labels)
         
@@ -78,28 +75,26 @@ class FeatureLoss(nn.Module):
         - device: The device on which the computations are performed.
         """
         super(FeatureLoss, self).__init__()
+        
         self.feature_num = feature_num
         self.temperature = temperature
         self.device = device
-
-        self.mask = self._mask_correlated_features(feature_num)
+        
+        self.K = 2 * feature_num
+        self.mask = self._mask_correlated_features()
         self.criterion = nn.CrossEntropyLoss(reduction="mean")
         self.similarity_f = nn.CosineSimilarity(dim=2)
 
-    def _mask_correlated_features(self, feature_num):
+    def _mask_correlated_features(self):
         """
         Create a mask to exclude correlated features from the loss calculation.
-
-        Parameters:
-        - feature_num: Number of features.
 
         Returns:
         - mask: Boolean mask excluding correlated features.
         """
-        K = 2 * feature_num
-        mask = torch.eye(K, dtype=torch.bool).to(self.device)
-        mask[:feature_num, feature_num:] = torch.eye(feature_num, dtype=torch.bool).to(self.device)
-        mask[feature_num:, :feature_num] = torch.eye(feature_num, dtype=torch.bool).to(self.device)
+        mask = torch.eye(self.K, dtype=torch.bool).to(self.device)
+        mask[:self.feature_num, self.feature_num:] = torch.eye(self.feature_num, dtype=torch.bool).to(self.device)
+        mask[self.feature_num:, :self.feature_num] = torch.eye(self.feature_num, dtype=torch.bool).to(self.device)
         mask = ~mask
         return mask
 
@@ -136,15 +131,14 @@ class FeatureLoss(nn.Module):
         
         f1 = f1.t()
         f2 = f2.t()
-        K = self.feature_num * 2
         f = torch.cat((f1, f2), dim=0)
 
         sim = self.similarity_f(f.unsqueeze(1), f.unsqueeze(0)) / self.temperature
-        positive_clusters = torch.cat((torch.diag(sim, self.feature_num), torch.diag(sim, -self.feature_num)), dim=0).reshape(K, 1)
-        negative_clusters = sim[self.mask].reshape(K, -1)
+        positive_features = torch.cat((torch.diag(sim, self.feature_num), torch.diag(sim, -self.feature_num)), dim=0).reshape(self.K, 1)
+        negative_features = sim[self.mask].reshape(self.K, -1)
 
-        labels = torch.zeros(K).to(positive_clusters.device).long()
-        logits = torch.cat((positive_clusters, negative_clusters), dim=1)
+        labels = torch.zeros(self.K).to(positive_features.device).long()
+        logits = torch.cat((positive_features, negative_features), dim=1)
         loss = self.criterion(logits, labels)
         
         return loss - neloss

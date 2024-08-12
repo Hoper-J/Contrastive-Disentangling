@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-from torch.nn.functional import normalize
 
 from .resnet import get_resnet
 
@@ -16,6 +15,7 @@ class Network(nn.Module):
         - hidden_dim: Dimensionality of the hidden layers.
         """
         super(Network, self).__init__()
+        
         self.resnet = get_resnet(backbone)
         
         # Instance projector to process the backbone's output
@@ -23,7 +23,7 @@ class Network(nn.Module):
             nn.Linear(self.resnet.rep_dim, self.resnet.rep_dim, bias=False),
             nn.BatchNorm1d(self.resnet.rep_dim),
             nn.ReLU(),
-            nn.Linear(self.resnet.rep_dim, hidden_dim),
+            nn.Linear(self.resnet.rep_dim, hidden_dim)
         )
         
         # Feature predictor to output feature predictions (using Sigmoid activation)
