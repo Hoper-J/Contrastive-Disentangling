@@ -33,7 +33,7 @@ common:
   blur: false                    # Default setting for applying Gaussian blur as data augmentation
   
   # Dataset customization settings
-  customize_datasets: false      # Whether to use a custom method for combining multiple datasets, rather than simple concatenation
+  customize_datasets: false      # Allows users to customize the training dataset. If set to true, please check the `get_custom_datasets()` function in `dataset.py`.
 
 datasets:
   cifar10:
