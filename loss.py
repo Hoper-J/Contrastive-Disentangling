@@ -19,10 +19,10 @@ class InstanceLoss(nn.Module):
         self.temperature = temperature
         self.device = device
 
-        self.mask = self.mask_correlated_samples(batch_size)
+        self.mask = self._mask_correlated_samples(batch_size)
         self.criterion = nn.CrossEntropyLoss(reduction="mean")
 
-    def mask_correlated_samples(self, batch_size):
+    def _mask_correlated_samples(self, batch_size):
         """
         Create a mask to exclude correlated samples from the loss calculation.
 
@@ -44,8 +44,8 @@ class InstanceLoss(nn.Module):
         Calculate the instance loss.
 
         Parameters:
-        - z1: Latent representations of first view.
-        - z2: Latent representations of second view.
+        - z1: Latent representations of the first view.
+        - z2: Latent representations of the second view.
 
         Returns:
         - loss: Calculated instance loss.
@@ -57,10 +57,7 @@ class InstanceLoss(nn.Module):
         z = torch.cat((z1, z2), dim=0)
     
         sim = torch.matmul(z, z.T) / self.temperature
-        sim_1_2 = torch.diag(sim, self.batch_size)
-        sim_2_1 = torch.diag(sim, -self.batch_size)
-        
-        positive_samples = torch.cat((sim_1_2, sim_2_1), dim=0).reshape(N, 1)
+        positive_samples = torch.cat((torch.diag(sim, self.batch_size), torch.diag(sim, -self.batch_size)), dim=0).reshape(N, 1)
         negative_samples = sim[self.mask].reshape(N, -1)
         
         labels = torch.zeros(N).to(positive_samples.device).long()
@@ -85,11 +82,11 @@ class FeatureLoss(nn.Module):
         self.temperature = temperature
         self.device = device
 
-        self.mask = self.mask_correlated_features(feature_num)
+        self.mask = self._mask_correlated_features(feature_num)
         self.criterion = nn.CrossEntropyLoss(reduction="mean")
         self.similarity_f = nn.CosineSimilarity(dim=2)
 
-    def mask_correlated_features(self, feature_num):
+    def _mask_correlated_features(self, feature_num):
         """
         Create a mask to exclude correlated features from the loss calculation.
 
@@ -106,7 +103,7 @@ class FeatureLoss(nn.Module):
         mask = ~mask
         return mask
 
-    def normalized_entropy_loss(self, predictions, epsilon=1e-12):
+    def _normalized_entropy_loss(self, predictions, epsilon=1e-12):
         """
         Calculate the normalized entropy loss for feature predictions.
 
@@ -133,8 +130,8 @@ class FeatureLoss(nn.Module):
         Returns:
         - loss: Calculated feature loss including normalized entropy loss for diversity.
         """
-        ne1 = self.normalized_entropy_loss(f1)
-        ne2 = self.normalized_entropy_loss(f2)
+        ne1 = self._normalized_entropy_loss(f1)
+        ne2 = self._normalized_entropy_loss(f2)
         neloss = (ne1 + ne2) / 2
         
         f1 = f1.t()
@@ -143,10 +140,7 @@ class FeatureLoss(nn.Module):
         f = torch.cat((f1, f2), dim=0)
 
         sim = self.similarity_f(f.unsqueeze(1), f.unsqueeze(0)) / self.temperature
-        sim_1_2 = torch.diag(sim, self.feature_num)
-        sim_2_1 = torch.diag(sim, -self.feature_num)
-
-        positive_clusters = torch.cat((sim_1_2, sim_2_1), dim=0).reshape(K, 1)
+        positive_clusters = torch.cat((torch.diag(sim, self.feature_num), torch.diag(sim, -self.feature_num)), dim=0).reshape(K, 1)
         negative_clusters = sim[self.mask].reshape(K, -1)
 
         labels = torch.zeros(K).to(positive_clusters.device).long()
