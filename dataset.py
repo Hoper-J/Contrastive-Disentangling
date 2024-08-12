@@ -108,9 +108,14 @@ def load_dataset(dataset_name, root='./data', download=True, transform=None):
     return dataset_mapping[dataset_name]()
 
 
-def get_combined_datasets():
+def get_custom_datasets():
     """
-    Combine multiple datasets into a single dataset.
+    Customizes and combines multiple datasets into a single dataset.
+    
+    Note: This function directly concatenates datasets, which may lead to issues
+    due to differing image sizes across datasets. Users are advised to carefully 
+    handle transforms to ensure compatibility across all datasets, or to use this 
+    function as a starting point for further customization.
     """
     cifar10_train, cifar10_test = load_dataset('cifar10')
     cifar100_train, cifar100_test = load_dataset('cifar100')
@@ -127,14 +132,15 @@ def get_combined_datasets():
     return combined_dataset
 
 
+
 def get_data_loader(config):
     """
     Get train, test, and visualization data loaders based on the config.
     """
     base_transform, augmentation_transform = get_transforms(config['s'], config['blur'])
 
-    if config['use_combined_datasets']:
-        train_dataset = get_combined_datasets()
+    if config['customize_datasets']:
+        train_dataset = get_custom_datasets()
         _, test_dataset = load_dataset(config["dataset"])
     else:
         train_dataset, test_dataset = load_dataset(config["dataset"])

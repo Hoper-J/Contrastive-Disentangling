@@ -1,54 +1,56 @@
 common:
   # Training settings
-  batch_size: 128            # Training batch size
-  epochs: 1000               # Number of training epochs
-  learning_rate: 0.0003      # Learning rate for the optimizer
+  batch_size: 128                # Training batch size
+  epochs: 1000                   # Number of training epochs
+  learning_rate: 0.0003          # Learning rate for the optimizer
   
   # Model settings
-  backbone: ResNet34         # Backbone network architecture
-  hidden_dim: 128            # Hidden dimension size for the instance projector's output
-  feature_num: 128           # Number of feature categories the feature predictor should predict
+  backbone: ResNet34             # Backbone network architecture
+  hidden_dim: 128                # Hidden dimension size for the instance projector's output
+  feature_num: 128               # Number of feature categories the feature predictor should predict
   
   # Loss settings
-  instance_temperature: 0.5  # Temperature for instance loss, controls the sharpness of the distribution
-  feature_temperature: 1.0   # Temperature for feature loss, controls the sharpness of the distribution
+  instance_temperature: 0.5      # Temperature for instance loss, controls the sharpness of the distribution
+  feature_temperature: 1.0       # Temperature for feature loss, controls the sharpness of the distribution
   
   # Optimization settings
-  weight_decay: 0            # Weight decay (L2 regularization) factor to prevent overfitting
-  use_gradnorm: false         # Whether to use gradient clipping to prevent exploding gradients
-  max_norm: 1.0              # Maximum norm for gradient clipping
-  use_scheduler: false        # Whether to use a learning rate scheduler for dynamic learning rate adjustments
+  weight_decay: 0                # Weight decay (L2 regularization) factor to prevent overfitting
+  use_gradnorm: false            # Whether to use gradient clipping to prevent exploding gradients
+  max_norm: 1.0                  # Maximum norm for gradient clipping
+  use_scheduler: false           # Whether to use a learning rate scheduler for dynamic learning rate adjustments
   
   # Checkpoint settings
-  checkpoint: true           # Whether to save checkpoints during training
-  reload: true               # Whether to reload from the last saved checkpoint if available
-  save_model: true           # Whether to save the final model after training
+  checkpoint: true               # Whether to save checkpoints during training
+  reload: true                   # Whether to reload from the last saved checkpoint if available
+  save_model: true               # Whether to save the final model after training
   
   # Experiment settings
-  project: CFL               # Project name for tracking experiments with WandB or other tools
-  seed: 42                   # Random seed for reproducibility of experiments
+  project: CFL                   # Project name for tracking experiments with WandB or other tools
+  seed: 42                       # Random seed for reproducibility of experiments
   
   # Augmentation settings
-  s: 1.0                     # Default color jitter strength for data augmentation
-  blur: false                # Default setting for applying Gaussian blur as data augmentation
-  use_combined_datasets: false  # Whether to combine multiple datasets into a single training dataset
+  s: 1.0                         # Default color jitter strength for data augmentation
+  blur: false                    # Default setting for applying Gaussian blur as data augmentation
+  
+  # Dataset customization settings
+  customize_datasets: false      # Whether to use a custom method for combining multiple datasets, rather than simple concatenation
 
 datasets:
   cifar10:
-    class_num: 10            # Number of classes for CIFAR-10 (used during evaluation/testing)
-    s: 0.5                   # Color jitter strength specific to CIFAR-10, overrides default
+    class_num: 10                # Number of classes for CIFAR-10 (used during evaluation/testing)
+    s: 0.5                       # Color jitter strength specific to CIFAR-10, overrides default
     
   cifar100:
-    class_num: 20            # Number of super-classes for CIFAR-100 (used during evaluation/testing)
-    s: 0.5                   # Color jitter strength specific to CIFAR-100, overrides default
+    class_num: 20                # Number of super-classes for CIFAR-100 (used during evaluation/testing)
+    s: 0.5                       # Color jitter strength specific to CIFAR-100, overrides default
     
   imagenet10:
-    class_num: 10            # Number of classes for ImageNet10 (used during evaluation/testing)
-    blur: true               # Apply Gaussian blur specifically for ImageNet10, overrides default
+    class_num: 10                # Number of classes for ImageNet10 (used during evaluation/testing)
+    blur: true                   # Apply Gaussian blur specifically for ImageNet10, overrides default
     
   tiny-imagenet:
-    class_num: 200           # Number of classes for Tiny ImageNet (used during evaluation/testing)
-    s: 0.5                   # Color jitter strength specific to Tiny ImageNet, overrides default
+    class_num: 200               # Number of classes for Tiny ImageNet (used during evaluation/testing)
+    s: 0.5                       # Color jitter strength specific to Tiny ImageNet, overrides default
     
   stl10:
-    class_num: 10            # Number of classes for STL-10 (used during evaluation/testing)
+    class_num: 10                # Number of classes for STL-10 (used during evaluation/testing)
