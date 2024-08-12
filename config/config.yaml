@@ -15,9 +15,9 @@ common:
   
   # Optimization settings
   weight_decay: 0            # Weight decay (L2 regularization) factor to prevent overfitting
-  use_gradnorm: true         # Whether to use gradient clipping to prevent exploding gradients
+  use_gradnorm: false         # Whether to use gradient clipping to prevent exploding gradients
   max_norm: 1.0              # Maximum norm for gradient clipping
-  use_scheduler: true        # Whether to use a learning rate scheduler for dynamic learning rate adjustments
+  use_scheduler: false        # Whether to use a learning rate scheduler for dynamic learning rate adjustments
   
   # Checkpoint settings
   checkpoint: true           # Whether to save checkpoints during training

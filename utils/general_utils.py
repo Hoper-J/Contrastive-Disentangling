@@ -45,11 +45,11 @@ def get_experiment_name(config, remark=""):
         config["backbone"],
     ]
 
-    if not config["use_scheduler"]:
-        parts.append("noscheduler")
+    if config["use_scheduler"]:
+        parts.append("scheduler")
     
-    if not config["use_gradnorm"]:
-        parts.append("nogradnorm")
+    if config["use_gradnorm"]:
+        parts.append("gradnorm")
 
     if config["weight_decay"] != 0:
         parts.append(f"wd{config['weight_decay']}")
