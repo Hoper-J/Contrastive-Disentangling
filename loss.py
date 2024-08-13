@@ -129,9 +129,7 @@ class FeatureLoss(nn.Module):
         ne2 = self._normalized_entropy_loss(f2)
         neloss = (ne1 + ne2) / 2
         
-        f1 = f1.t()
-        f2 = f2.t()
-        f = torch.cat((f1, f2), dim=0)
+        f = torch.cat((f1, f2), dim=1).T
 
         sim = self.similarity_f(f.unsqueeze(1), f.unsqueeze(0)) / self.temperature
         positive_features = torch.cat((torch.diag(sim, self.feature_num), torch.diag(sim, -self.feature_num)), dim=0).reshape(self.K, 1)
