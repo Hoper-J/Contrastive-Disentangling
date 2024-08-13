@@ -125,10 +125,6 @@ class FeatureLoss(nn.Module):
         Returns:
         - loss: Calculated feature loss including normalized entropy loss for diversity.
         """
-        ne1 = self._normalized_entropy_loss(f1)
-        ne2 = self._normalized_entropy_loss(f2)
-        neloss = (ne1 + ne2) / 2
-        
         f1 = f1.T
         f2 = f2.T
         f = torch.cat((f1, f2), dim=0)
@@ -140,5 +136,7 @@ class FeatureLoss(nn.Module):
         labels = torch.zeros(self.K).to(positive_features.device).long()
         logits = torch.cat((positive_features, negative_features), dim=1)
         loss = self.criterion(logits, labels)
+
+        neloss = self._normalized_entropy_loss(f)
         
         return loss - neloss
