@@ -134,6 +134,11 @@ def run(config):
             
         if (epoch % 10 == 0) and config["class_num"] <= 20:
             visualize_embeddings(model, visualize_loader, device, epoch, wandb.run.name)
+            wandb.log({
+                "TSNE_backbone": wandb.Image(f'images/tsne_embeddings_backbone_epoch_{epoch}_{wandb.run.name}.png'),
+                "TSNE_feature": wandb.Image(f'images/tsne_embeddings_feature_epoch_{epoch}_{wandb.run.name}.png'),
+                "epoch": epoch
+            })
 
         if epoch % 100 == 0:
             current_metrics = {
