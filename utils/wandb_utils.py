@@ -76,3 +76,20 @@ def log_epoch_metrics(epoch, avg_instance_loss, avg_feature_loss, avg_loss, nmi_
         "ARI_feature": ari_feature,
         "ACC_feature": acc_feature
     })
+
+def log_tsne_images(epoch, run_name):
+    """
+    Logs t-SNE images for the current epoch to Weights & Biases (wandb).
+
+    Parameters:
+    - epoch (int): The current epoch number, used for labeling the images in the logs.
+    - run_name (str): The name of the current wandb run, used to identify the specific images.
+
+    Images are expected to be stored in the 'images' directory with filenames following 
+    the pattern 'tsne_embeddings_backbone_epoch_<epoch>_<run_name>.png' and 
+    'tsne_embeddings_feature_epoch_<epoch>_<run_name>.png'.
+    """
+    wandb.log({
+        "TSNE_backbone": wandb.Image(f"images/tsne_embeddings_backbone_epoch_{epoch}_{run_name}.png"),
+        "TSNE_feature": wandb.Image(f"images/tsne_embeddings_feature_epoch_{epoch}_{run_name}.png"),
+    })

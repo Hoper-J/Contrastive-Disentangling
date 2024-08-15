@@ -19,7 +19,7 @@ from utils.general_utils import (
     save_model, 
     move_model_to_finished
 )
-from utils.wandb_utils import init_wandb, log_batch_metrics, log_epoch_metrics
+from utils.wandb_utils import init_wandb, log_batch_metrics, log_epoch_metrics, log_tsne_images
 from utils.metrics import evaluate
 from utils.visualization import visualize_embeddings
 from utils.checkpoint import save_checkpoint, load_checkpoint
@@ -137,10 +137,7 @@ def run(config):
             # Visualize embeddings if class number is small
             if config["class_num"] <= 20:
                 visualize_embeddings(model, visualize_loader, device, epoch, wandb.run.name)
-                wandb.log({
-                    "TSNE_backbone": wandb.Image(f"images/tsne_embeddings_backbone_epoch_{epoch}_{wandb.run.name}.png"),
-                    "TSNE_feature": wandb.Image(f"images/tsne_embeddings_feature_epoch_{epoch}_{wandb.run.name}.png"),
-                })
+                log_tsne_images(epoch, wandb.run.name)
 
             # Log current metrics
             current_metrics = {
