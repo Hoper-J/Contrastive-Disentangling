@@ -33,34 +33,48 @@ def run(config):
     Parameters:
     - config (dict): Experiment configuration dictionary.
     """
+    # Setup environment
     set_seed(config["seed"])
     experiment_name = get_experiment_name(config)
     config["project"] = f"{config['project']}-{config['dataset']}"
     
+    # Device configuration
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    if device == torch.device("cpu") and hasattr(torch.backends, "mps") and torch.backends.mps.is_available():  # Check if "mps" backend is available for Apple Silicon support
+
+    # Check if "mps" backend is available for Apple Silicon support
+    if device == torch.device("cpu") and hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
         device = torch.device("mps")
-        
-    train_loader, test_loader, visualize_loader = get_data_loader(config)
+    
+    # Initialize model
     model = Network(config["backbone"], config["feature_num"], config["hidden_dim"]).to(device)
     print(f"The model has {count_parameters(model):,} trainable parameters.")
-
-    optimizer = optim.Adam(model.parameters(), lr=config["learning_rate"], weight_decay=config["weight_decay"])
     
-    scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=config["epochs"]) if config["use_scheduler"] else None
+    # Initialize optimizer
+    optimizer = optim.Adam(model.parameters(), lr=config["learning_rate"], weight_decay=config["weight_decay"])
 
-    instance_loss_fn = InstanceLoss(config["batch_size"], config["instance_temperature"], device=device)
-    feature_loss_fn = FeatureLoss(config["feature_num"], config["feature_temperature"], device=device)
-
+    # Initialize learning rate scheduler if needed
+    scheduler = None
+    if config["use_scheduler"]:
+        scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=config["epochs"])
+    
+    # Initialize records and best NMI tracking
     records = ExperimentRecords()
     best_nmi = 0.0
     
+    # Checkpoint loading before data loading
     start_epoch, run_id = 1, None
     checkpoint_path = f"checkpoints/{config['dataset']}_checkpoint_{experiment_name}.pth.tar"
-    
     if config["reload"] and os.path.exists(checkpoint_path):
         start_epoch, run_id, best_nmi = load_checkpoint(model, optimizer, records, filename=checkpoint_path, scheduler=scheduler)
-        
+    
+    # Load data loaders
+    train_loader, test_loader, visualize_loader = get_data_loader(config)
+    
+    # Loss functions
+    instance_loss_fn = InstanceLoss(config["batch_size"], config["instance_temperature"], device=device)
+    feature_loss_fn = FeatureLoss(config["feature_num"], config["feature_temperature"], device=device)
+
+    # Initialize WandB
     init_wandb(config, experiment_name, run_id)
         
     for epoch in range(start_epoch, config["epochs"] + 1):
