@@ -102,12 +102,7 @@ def run(config):
                 torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=config["max_norm"])
             optimizer.step()
 
-            log_batch_metrics(
-                instance_loss.item(),
-                feature_loss.item(),
-                loss.item(),
-                optimizer.param_groups[0]["lr"]
-            )
+            log_batch_metrics(instance_loss.item(), feature_loss.item(), loss.item(), optimizer.param_groups[0]["lr"])
 
             progress_bar.set_postfix(batch_loss=epoch_loss / (i + 1))
         
@@ -140,16 +135,8 @@ def run(config):
                 log_tsne_images(epoch, wandb.run.name)
 
             # Log current metrics
-            current_metrics = {
-                "nmi_backbone": nmi_backbone,
-                "ari_backbone": ari_backbone,
-                "acc_backbone": acc_backbone,
-                "nmi_feature": nmi_feature,
-                "ari_feature": ari_feature,
-                "acc_feature": acc_feature,
-            }
             records.log_best_metrics(epoch)
-            records.log_current_metrics(current_metrics)
+            records.log_current_metrics(nmi_backbone, ari_backbone, acc_backbone, nmi_feature, ari_feature, acc_feature)
 
         if config["checkpoint"]:
             save_checkpoint(model, optimizer, epoch, wandb.run.id, records, best_nmi, scheduler, filename=checkpoint_path)

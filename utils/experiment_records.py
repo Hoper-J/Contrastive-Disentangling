@@ -41,9 +41,13 @@ class ExperimentRecords:
         for key, value in self.best_metrics.items():
             self.records[f"best_{key}"].append(value)
 
-    def log_current_metrics(self, current_metrics: dict):
-        for key, value in current_metrics.items():
-            self.records[key].append(value)
+    def log_current_metrics(self, nmi_backbone: float, ari_backbone: float, acc_backbone: float, nmi_feature: float, ari_feature: float, acc_feature: float):
+        self.records["nmi_feature"].append(nmi_feature)
+        self.records["ari_feature"].append(ari_feature)
+        self.records["acc_feature"].append(acc_feature)
+        self.records["nmi_backbone"].append(nmi_backbone)
+        self.records["ari_backbone"].append(ari_backbone)
+        self.records["acc_backbone"].append(acc_backbone)
 
     def save_csv(self, run_name: str):
         df = pd.DataFrame(self.records).T
