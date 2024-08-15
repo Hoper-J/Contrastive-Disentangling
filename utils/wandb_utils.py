@@ -29,3 +29,50 @@ def init_wandb(config, experiment_name, run_id=None, metrics=DEFAULT_METRICS):
 
     for metric in metrics:
         wandb.define_metric(metric, step_metric="epoch")
+
+
+def log_batch_metrics(instance_batch_loss, feature_batch_loss, batch_loss, learning_rate):
+    """
+    Logs the metrics for each batch during training to Weights & Biases (wandb).
+
+    Parameters:
+    - instance_batch_loss (float): The instance loss for the current batch.
+    - feature_batch_loss (float): The feature loss for the current batch.
+    - batch_loss (float): The total loss for the current batch.
+    - learning_rate (float): The learning rate used for training.
+    """
+    wandb.log({
+        "instance_batch_loss": instance_batch_loss,
+        "feature_batch_loss": feature_batch_loss,
+        "batch_loss": batch_loss,
+        "learning_rate": learning_rate,
+    })
+    
+def log_epoch_metrics(epoch, avg_instance_loss, avg_feature_loss, avg_loss, nmi_backbone, ari_backbone, acc_backbone, nmi_feature, ari_feature, acc_feature):
+    """
+    Logs the metrics for the current epoch to Weights & Biases (wandb).
+
+    Parameters:
+    - epoch (int): The current epoch number.
+    - avg_instance_loss (float): Average instance loss for the epoch.
+    - avg_feature_loss (float): Average feature loss for the epoch.
+    - avg_loss (float): Average total loss for the epoch.
+    - nmi_backbone (float): Normalized Mutual Information (NMI) for the backbone features.
+    - ari_backbone (float): Adjusted Rand Index (ARI) for the backbone features.
+    - acc_backbone (float): Accuracy for the backbone features.
+    - nmi_feature (float): Normalized Mutual Information (NMI) for the feature predictions.
+    - ari_feature (float): Adjusted Rand Index (ARI) for the feature predictions.
+    - acc_feature (float): Accuracy for the feature predictions.
+    """
+    wandb.log({
+        "epoch": epoch,
+        "instance_epoch_loss": avg_instance_loss,
+        "feature_epoch_loss": avg_feature_loss,
+        "epoch_loss": avg_loss,
+        "NMI_backbone": nmi_backbone,
+        "ARI_backbone": ari_backbone,
+        "ACC_backbone": acc_backbone,
+        "NMI_feature": nmi_feature,
+        "ARI_feature": ari_feature,
+        "ACC_feature": acc_feature
+    })

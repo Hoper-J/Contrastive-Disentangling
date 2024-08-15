@@ -19,7 +19,7 @@ from utils.general_utils import (
     save_model, 
     move_model_to_finished
 )
-from utils.wandb_utils import init_wandb
+from utils.wandb_utils import init_wandb, log_batch_metrics, log_epoch_metrics
 from utils.metrics import evaluate
 from utils.visualization import visualize_embeddings
 from utils.checkpoint import save_checkpoint, load_checkpoint
@@ -102,12 +102,12 @@ def run(config):
                 torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=config["max_norm"])
             optimizer.step()
 
-            wandb.log({
-                "instance_batch_loss": instance_loss.item(),
-                "feature_batch_loss": feature_loss.item(),
-                "batch_loss": loss.item(),
-                "learning_rate": optimizer.param_groups[0]["lr"],
-            })
+            log_batch_metrics(
+                instance_loss.item(),
+                feature_loss.item(),
+                loss.item(),
+                optimizer.param_groups[0]["lr"]
+            )
 
             progress_bar.set_postfix(batch_loss=epoch_loss / (i + 1))
         
@@ -118,24 +118,13 @@ def run(config):
         avg_instance_loss = instance_epoch_loss / len(train_loader)
         avg_feature_loss = feature_epoch_loss / len(train_loader)
 
-        wandb.log({
-            "instance_epoch_loss": avg_instance_loss,
-            "feature_epoch_loss": avg_feature_loss,
-            "epoch_loss": avg_loss,
-            "epoch": epoch
-        })
-        print(f"Epoch [{epoch}], Loss: {avg_loss}, Instance Loss: {avg_instance_loss}, Feature Loss: {avg_feature_loss}")
-
         nmi_backbone, ari_backbone, acc_backbone, nmi_feature, ari_feature, acc_feature = evaluate(model, test_loader, device)
+
+        # Logging metrics
+        log_epoch_metrics(epoch, avg_instance_loss, avg_feature_loss, avg_loss, nmi_backbone, ari_backbone, acc_backbone, nmi_feature, ari_feature, acc_feature)
+        
+        print(f"Epoch [{epoch}], Loss: {avg_loss}, Instance Loss: {avg_instance_loss}, Feature Loss: {avg_feature_loss}")
         print(f"Backbone NMI: {nmi_backbone}, Feature NMI: {nmi_feature}")
-        wandb.log({
-            "NMI_backbone": nmi_backbone,
-            "ARI_backbone": ari_backbone,
-            "ACC_backbone": acc_backbone,
-            "NMI_feature": nmi_feature,
-            "ARI_feature": ari_feature,
-            "ACC_feature": acc_feature,
-        })
             
         best_nmi = save_best_model(nmi_backbone, nmi_feature, best_nmi, config, model, wandb.run.name)
         records.update_best_metrics(nmi_backbone, ari_backbone, acc_backbone, nmi_feature, ari_feature, acc_feature)
