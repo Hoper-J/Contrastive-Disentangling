@@ -37,26 +37,26 @@ def run(config):
     experiment_name = get_experiment_name(config)
     config["project"] = f"{config['project']}-{config['dataset']}"
     
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    if device == torch.device('cpu') and hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():  # Check if 'mps' backend is available for Apple Silicon support
-        device = torch.device('mps')
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    if device == torch.device("cpu") and hasattr(torch.backends, "mps") and torch.backends.mps.is_available():  # Check if "mps" backend is available for Apple Silicon support
+        device = torch.device("mps")
         
     train_loader, test_loader, visualize_loader = get_data_loader(config)
-    model = Network(config["backbone"], config['feature_num'], config["hidden_dim"]).to(device)
-    print(f'The model has {count_parameters(model):,} trainable parameters.')
+    model = Network(config["backbone"], config["feature_num"], config["hidden_dim"]).to(device)
+    print(f"The model has {count_parameters(model):,} trainable parameters.")
 
-    optimizer = optim.Adam(model.parameters(), lr=config["learning_rate"], weight_decay=config['weight_decay'])
+    optimizer = optim.Adam(model.parameters(), lr=config["learning_rate"], weight_decay=config["weight_decay"])
     
     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=config["epochs"]) if config["use_scheduler"] else None
 
     instance_loss_fn = InstanceLoss(config["batch_size"], config["instance_temperature"], device=device)
-    feature_loss_fn = FeatureLoss(config['feature_num'], config["feature_temperature"], device=device)
+    feature_loss_fn = FeatureLoss(config["feature_num"], config["feature_temperature"], device=device)
 
     records = ExperimentRecords()
     best_nmi = 0.0
     
     start_epoch, run_id = 1, None
-    checkpoint_path = f'checkpoints/{config["dataset"]}_checkpoint_{experiment_name}.pth.tar'
+    checkpoint_path = f"checkpoints/{config['dataset']}_checkpoint_{experiment_name}.pth.tar"
     
     if config["reload"] and os.path.exists(checkpoint_path):
         start_epoch, run_id, best_nmi = load_checkpoint(model, optimizer, records, filename=checkpoint_path, scheduler=scheduler)
@@ -66,7 +66,7 @@ def run(config):
     for epoch in range(start_epoch, config["epochs"] + 1):
         model.train()
         instance_epoch_loss = feature_epoch_loss = epoch_loss = 0.0
-        progress_bar = tqdm(train_loader, desc=f'Epoch {epoch}')
+        progress_bar = tqdm(train_loader, desc=f"Epoch {epoch}")
         
         for i, (x1, x2, _) in enumerate(progress_bar):
             x1, x2 = x1.to(device), x2.to(device)
@@ -92,7 +92,7 @@ def run(config):
                 "instance_batch_loss": instance_loss.item(),
                 "feature_batch_loss": feature_loss.item(),
                 "batch_loss": loss.item(),
-                "learning_rate": optimizer.param_groups[0]['lr'],
+                "learning_rate": optimizer.param_groups[0]["lr"],
             })
 
             progress_bar.set_postfix(batch_loss=epoch_loss / (i + 1))
@@ -110,10 +110,10 @@ def run(config):
             "epoch_loss": avg_loss,
             "epoch": epoch
         })
-        print(f'Epoch [{epoch}], Loss: {avg_loss}, Instance Loss: {avg_instance_loss}, Feature Loss: {avg_feature_loss}')
+        print(f"Epoch [{epoch}], Loss: {avg_loss}, Instance Loss: {avg_instance_loss}, Feature Loss: {avg_feature_loss}")
 
         nmi_backbone, ari_backbone, acc_backbone, nmi_feature, ari_feature, acc_feature = evaluate(model, test_loader, device)
-        print(f'Backbone NMI: {nmi_backbone}, Feature NMI: {nmi_feature}')
+        print(f"Backbone NMI: {nmi_backbone}, Feature NMI: {nmi_feature}")
         wandb.log({
             "NMI_backbone": nmi_backbone,
             "ARI_backbone": ari_backbone,
@@ -128,16 +128,15 @@ def run(config):
         
         if epoch % 100 == 0:
             # Save the model
-            if config['save_model']:
-                save_model(model, config['dataset'], epoch)
+            if config["save_model"]:
+                save_model(model, config["dataset"], epoch)
             
             # Visualize embeddings if class number is small
             if config["class_num"] <= 20:
                 visualize_embeddings(model, visualize_loader, device, epoch, wandb.run.name)
                 wandb.log({
-                    "TSNE_backbone": wandb.Image(f'images/tsne_embeddings_backbone_epoch_{epoch}_{wandb.run.name}.png'),
-                    "TSNE_feature": wandb.Image(f'images/tsne_embeddings_feature_epoch_{epoch}_{wandb.run.name}.png'),
-                    "epoch": epoch
+                    "TSNE_backbone": wandb.Image(f"images/tsne_embeddings_backbone_epoch_{epoch}_{wandb.run.name}.png"),
+                    "TSNE_feature": wandb.Image(f"images/tsne_embeddings_feature_epoch_{epoch}_{wandb.run.name}.png"),
                 })
 
             # Log current metrics
@@ -162,11 +161,11 @@ def run(config):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Run experiment with specified dataset')
-    parser.add_argument('--dataset', type=str, required=True, help='Dataset name (e.g., cifar10, cifar100, imagenet10)')
+    parser = argparse.ArgumentParser(description="Run experiment with specified dataset")
+    parser.add_argument("--dataset", type=str, required=True, help="Dataset name (e.g., cifar10, cifar100, imagenet10)")
     args = parser.parse_args()
     
-    config_path = 'config/config.yaml'
+    config_path = "config/config.yaml"
     config = load_config(config_path, args.dataset)
     config["dataset"] = args.dataset
     
