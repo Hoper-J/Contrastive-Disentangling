@@ -139,7 +139,7 @@ def get_data_loader(config):
     """
     base_transform, augmentation_transform = get_transforms(config['s'], config['blur'])
 
-    if config['customize_datasets']:
+    if config.get('customize_datasets', False):
         train_dataset = get_custom_datasets()
         _, test_dataset = load_dataset(config["dataset"])
     else:
