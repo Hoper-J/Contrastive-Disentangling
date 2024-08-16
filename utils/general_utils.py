@@ -73,7 +73,7 @@ def count_parameters(model):
 
 def save_best_model(nmi_backbone, nmi_classifier, best_nmi, config, model, model_name):
     """
-    Save the model if it achieves the best NMI score so far.
+    Save the model and its resnet component if it achieves the best NMI score so far.
 
     Parameters:
     - nmi_backbone (float): NMI score for the backbone features.
@@ -89,10 +89,20 @@ def save_best_model(nmi_backbone, nmi_classifier, best_nmi, config, model, model
     if nmi_backbone > best_nmi or nmi_classifier > best_nmi:
         best_nmi = max(nmi_backbone, nmi_classifier)
         if config["save_model"]:
-            model_path = os.path.join('models', f'best_model_{model_name}.pth')
-            os.makedirs(os.path.dirname(model_path), exist_ok=True)
+            model_dir = os.path.join('models', model_name)
+            os.makedirs(model_dir, exist_ok=True)
+            
+            # Save the full model
+            model_path = os.path.join(model_dir, f'best_model_{model_name}.pth')
             torch.save(model.state_dict(), model_path)
-            print(f"Saved best model with NMI {best_nmi:.4f} to {model_path}")
+            
+            # Save the resnet part of the model
+            resnet_path = os.path.join(model_dir, f'best_resnet_{model_name}.pth')
+            torch.save(model.resnet.state_dict(), resnet_path)
+            
+            print(f"Best model and ResNet saved with NMI {best_nmi:.4f}:\n"
+                  f"- Model: {model_path}\n"
+                  f"- ResNet: {resnet_path}")
         else:
             print(f"Best model's NMI {best_nmi:.4f}")
     return best_nmi
@@ -100,7 +110,7 @@ def save_best_model(nmi_backbone, nmi_classifier, best_nmi, config, model, model
 
 def save_model(model, dataset_name, epoch):
     """
-    Save the model state dictionary to a file.
+    Save the model and its resnet component state dictionary to a file.
 
     Parameters:
     - model (nn.Module): The model to save.
@@ -110,9 +120,17 @@ def save_model(model, dataset_name, epoch):
     model_dir = os.path.join("models", dataset_name)
     os.makedirs(model_dir, exist_ok=True)
 
+    # Save the full model
     model_path = os.path.join(model_dir, f"model_epoch_{epoch}.pth")
     torch.save(model.state_dict(), model_path)
-    print(f"Model saved to {model_path}")
+    
+    # Save the resnet part of the model
+    resnet_path = os.path.join(model_dir, f"resnet_epoch_{epoch}.pth")
+    torch.save(model.resnet.state_dict(), resnet_path)
+    
+    print(f"Model and ResNet saved:\n"
+          f"- Model: {model_path}\n"
+          f"- ResNet: {resnet_path}")
 
 
 def move_model_to_finished(cfg, model_name):
