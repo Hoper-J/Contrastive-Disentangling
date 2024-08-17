@@ -89,7 +89,7 @@ def save_best_model(nmi_backbone, nmi_classifier, best_nmi, config, model, model
     if nmi_backbone > best_nmi or nmi_classifier > best_nmi:
         best_nmi = max(nmi_backbone, nmi_classifier)
         if config["save_model"]:
-            model_dir = os.path.join('models', model_name)
+            model_dir = 'models'
             os.makedirs(model_dir, exist_ok=True)
             
             # Save the full model
