@@ -135,7 +135,7 @@ def save_model(model, dataset_name, epoch):
 
 def move_model_to_finished(cfg, model_name):
     """
-    Move the saved model to the 'finished' folder.
+    Move the saved model and its ResNet component to the 'finished' folder.
 
     Parameters:
     - cfg: Configuration dictionary.
@@ -143,7 +143,15 @@ def move_model_to_finished(cfg, model_name):
     """
     if cfg["save_model"]:
         best_model_path = os.path.join('models', f'best_model_{model_name}.pth')
+        best_resnet_path = os.path.join('models', f'best_resnet_{model_name}.pth')
+        
         finished_model_path = os.path.join('models', 'finished', os.path.basename(best_model_path))
+        finished_resnet_path = os.path.join('models', 'finished', os.path.basename(best_resnet_path))
+        
         os.makedirs(os.path.dirname(finished_model_path), exist_ok=True)
+        
         shutil.move(best_model_path, finished_model_path)
+        shutil.move(best_resnet_path, finished_resnet_path)
+        
         print(f"Moved best model to {finished_model_path}")
+        print(f"Moved best ResNet to {finished_resnet_path}")
