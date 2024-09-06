@@ -48,12 +48,11 @@ class InstanceLoss(nn.Module):
         Returns:
         - loss: Calculated instance loss.
         """
-        z1 = normalize(z1, dim=1)
-        z2 = normalize(z2, dim=1)
-        
         z = torch.cat((z1, z2), dim=0)
-    
-        sim = torch.matmul(z, z.T) / self.temperature
+
+        # Normalize the vectors (equivalent to cosine similarity calculation)
+        z = normalize(z, dim=1)
+        sim = torch.mm(z, z.t()) / self.temperature
         positive_samples = torch.cat((torch.diag(sim, self.batch_size), torch.diag(sim, -self.batch_size)), dim=0).reshape(self.N, 1)
         negative_samples = sim[self.mask].reshape(self.N, -1)
         
@@ -129,14 +128,16 @@ class FeatureLoss(nn.Module):
         f2 = f2.T
         f = torch.cat((f1, f2), dim=0)
 
-        sim = self.similarity_f(f.unsqueeze(1), f.unsqueeze(0)) / self.temperature
+        neloss = self._normalized_entropy_loss(f)
+
+        # Normalize the vectors (equivalent to cosine similarity calculation)
+        f = normalize(f, dim=1)
+        sim = torch.mm(f, f.t()) / self.temperature
         positive_features = torch.cat((torch.diag(sim, self.feature_num), torch.diag(sim, -self.feature_num)), dim=0).reshape(self.K, 1)
         negative_features = sim[self.mask].reshape(self.K, -1)
 
         labels = torch.zeros(self.K).to(positive_features.device).long()
         logits = torch.cat((positive_features, negative_features), dim=1)
         loss = self.criterion(logits, labels)
-
-        neloss = self._normalized_entropy_loss(f)
         
         return loss - neloss
