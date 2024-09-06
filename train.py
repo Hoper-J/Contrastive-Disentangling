@@ -149,7 +149,7 @@ def run(config):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run experiment with specified dataset")
-    parser.add_argument("--dataset", type=str, required=True, help="Dataset name (e.g., cifar10, cifar100, imagenet10)")
+    parser.add_argument("--dataset", type=str, required=True, help="Dataset name (e.g., cifar10, cifar100, stl10, imagenet10)")
     args = parser.parse_args()
     
     config_path = "config/config.yaml"

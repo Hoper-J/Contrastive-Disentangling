@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from sklearn.manifold import TSNE
-import wandb
+
 
 def visualize_embeddings(model, loader, device, epoch, name, display=False):
     """

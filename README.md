@@ -20,22 +20,12 @@ The following table presents the t-SNE visualizations of the model's feature ext
 | Backbone | ![tsne_backbone_cifar10](./Figures/FigureA.4(a).jpeg) | ![tsne_backbone_cifar100](./Figures/FigureA.5(a).jpeg) | ![tsne_backbone_imagenet10](./Figures/FigureA.6(a).jpeg) | ![tsne_backbone_stl10](./Figures/FigureA.7(a).jpeg) |
 | Feature  | ![tsne_feature_cifar10](./Figures/FigureA.4(b).jpeg)  | ![tsne_feature_cifar100](./Figures/FigureA.5(b).jpeg)  | ![tsne_feature_imagenet10](./Figures/FigureA.6(b).jpeg)  | ![tsne_feature_stl10](./Figures/FigureA.7(b).jpeg)  |
 
-## Experimental Setup
+## Hardware and Software Configuration
 
-We used the following hardware and software environment for the experiments:
+The experiments were conducted using the following hardware and software setup:
 
-- **Hardware**:
-  - NVIDIA RTX 3090 (24GB)
-  - 18 vCPU AMD EPYC 9754 128-Core Processor
-
-- **Software Environment**:
-  - Python 3.10
-  - PyTorch 2.1.2 + cu121
-
-While we used a relatively recent configuration, it is not mandatory to strictly follow this setup. The code should work on earlier versions as well. We have successfully tested the code in the following environments:
-
-- Python 3.8
-- PyTorch 1.11.0 + cu113
+- **Hardware**: NVIDIA RTX 3090 (24GB) and 18 vCPU AMD EPYC 9754
+- **Software**: Python 3.10, PyTorch 2.1.2 + cu121
 
 When the batch size is set to 128, the memory usage will reach **over 11GB**.
 
@@ -77,13 +67,126 @@ Please note that the files in the **best models** folder refer to models where t
 
 # Quick Start
 
+## Environment Setup
+
+We recommend using a more recent environment configuration to achieve the best performance. However, we also provide compatible installation instructions for older versions. If you need to run the model in a lower version environment, please refer to the compatible configuration below.
+
+### Create a Virtual Environment and Install Dependencies
+
+1. Create a virtual environment (recommended Python 3.8 or higher):
+
+   ```bash
+   conda create -n CD python=3.8
+   ```
+
+   - For compatibility with older versions (Python 3.7 or lower):
+
+   ```bash
+   conda create -n CD python=3.7
+   conda activate CD
+   ```
+
+2. Install PyTorch and CUDA:
+
+   - Recommended version:
+
+     ```bash
+     # Using pip
+     pip install torch torchvision torchaudio
+     
+     # Or using conda
+     conda install pytorch::pytorch torchvision torchaudio -c pytorch
+     ```
+
+   - Compatibility version:
+
+     ```bash
+     # Using pip
+     pip install torch==1.1.0 torchvision==0.3.0 -f https://download.pytorch.org/whl/cu100/torch_stable.html
+     
+     # Or using conda
+     conda install pytorch==1.1.0 torchvision==0.3.0 cudatoolkit=10.0 -c pytorch
+     ```
+
+3. Install other dependencies (for all versions):
+
+   ```bash
+   # Data processing and scientific computation
+   pip install numpy pandas scikit-learn 
+   
+   # Image processing and computer vision
+   pip install opencv-python 
+   
+   # Progress bar, configuration file handling, and visualization
+   pip install tqdm pyyaml matplotlib
+   
+   # Experiment management and logging
+   pip install wandb
+   ```
+
+4. Verify that PyTorch and CUDA are installed correctly:
+
+   ```python
+   import torch
+   print(torch.__version__)  # Check the PyTorch version
+   print(torch.cuda.is_available())  # Verify if CUDA is available
+   ```
+
+### ImportError: cannot import name 'PILLOW_VERSION' from 'PIL'
+
+If you encounter this error during runtime, try resolving it with the following command:
+
+```bash
+pip install Pillow==6.2.2  # You can also try pip install Pillow==10.2.0
+```
+
+### Install Dependencies Using Requirements Files (Compatibility Version)
+
+We provide `requirements.txt` and `environment.yml` files that list the minimum environment requirements for running the experiments. Although it might work in lower environments, we have not tested it extensively. You can install the dependencies as follows:
+
+```bash
+# Using pip
+pip install -r requirements.txt
+
+# Or using conda
+conda env create -f environment.yml
+conda activate CD
+```
+
+### Important Notes
+
+- Versions of **PyTorch below 1.6.0** may not load the pre-trained models we provide (this does not affect loading your own trained files). Therefore, if you want to use our pre-trained models, we recommend using a more recent environment.
+
+- Based on simple testing, using **PyTorch 1.11.0 + CUDA 11.3** provides about a **9%** performance improvement compared to **PyTorch 1.1.0 + CUDA 10** for current experiments.
+
 ## Dataset Preparation
 
-CIFAR-10, CIFAR-100, and STL-10 can be automatically downloaded. For **ImageNet-10**, you can use Kaggle to download it from the command line:
+CIFAR-10, CIFAR-100, and STL-10 datasets can be automatically downloaded through the code. For **ImageNet-10**, you can download it via Kaggle from the command line:
 
 ```bash
 kaggle datasets download -d liusha249/imagenet10
 ```
+
+## Start Training
+
+You can start training the model using the following command. Use the `python train.py --dataset [dataset_name]` command to specify the dataset you want to use with the `--dataset` argument.
+
+**Supported dataset names** include:
+
+- `cifar10`
+- `cifar100`
+- `stl10`
+- `imagenet10`
+
+For example, to run experiments on the **STL-10** dataset, use the following command:
+
+```bash
+python train.py --dataset stl10
+```
+
+The configuration file is located at [config/config.yaml](https://github.com/Hoper-J/Contrastive-Disentangling/blob/master/config/config.yaml) and will be loaded based on the dataset specified.
+
+Ensure that the environment is set up correctly and the corresponding datasets are prepared before running training. The metrics and results during training can be viewed in **wandb** (if logging is enabled).
 
 ## How to Use Trained Model
 
@@ -112,12 +215,11 @@ Here, we address some potential questions you may have:
 3. **Why does wandb show a longer runtime than described in the paper?**
 
    There are three main reasons:
-
    - We log full metrics after each epoch, effectively doubling the computation time  (common).
    - Multiple experiments are running concurrently on the same GPU  (common).
    - Remote server shutdowns may cause wandb to record extra time due to lack of a termination signal.
 
-4. **Is 1000 epochs where the model reaches its best performance?**
+5. **Is 1000 epochs where the model reaches its best performance?**
 
    Not necessarily. We took additional time to record experimental metrics to show the changes in performance over time, rather than treating the training process as a black box where you tweak hyperparameters and wait for results. As the curves suggest, **CIFAR-10** and **CIFAR-100** still have room for improvement (+2%/1000 epochs). If you'd like to continue training the model beyond 1000 epochs, you can simply increase the number of `epochs` in the config and set `reload=True` to resume training.
 
@@ -127,14 +229,14 @@ Here, we address some potential questions you may have:
 
    Therefore, for the same experimental config, you don’t need to re-run the code to verify the results. You can check the recorded runs on [wandb](https://github.com/Hoper-J/Contrastive-Disentangling/tree/master?tab=readme-ov-file#experiment-records).
 
-6. **Is batch size=256 better than batch size=128?**
+7. **Is batch size=256 better than batch size=128?**
 
    Not necessarily. Larger batch sizes do not always yield better results. Our model already performs well with a batch size of 128. This is a common misconception, sometimes fueled by the availability of larger GPUs: "Why use only 12GB if you have more?"
 
-7. **How to handle the `UserWarning: Plan failed with a cudnnException` warning?**
+8. **How to handle the `UserWarning: Plan failed with a cudnnException` warning?**
 
    This warning is related to cuDNN’s handling of certain convolution operations in PyTorch. It appears because we set `torch.backends.cudnn.deterministic = True` to ensure reproducibility. You can adjust the `set_seed()` function in [utils/general_utils.py](https://github.com/Hoper-J/Contrastive-Disentangling/blob/245686bfeedb39561fc477d3724505c798a0282b/utils/general_utils.py#L18) by setting `torch.backends.cudnn.deterministic = False` and `torch.backends.cudnn.benchmark = True` if you prioritize training speed over result reproducibility.
 
-8. **Why use `torch.mm()` instead of `nn.CosineSimilarity()` for loss computation?**
+9. **Why use `torch.mm()` instead of `nn.CosineSimilarity()` for loss computation?**
 
    After normalizing the vectors, their magnitudes become 1, making the dot product equivalent to the cosine similarity.

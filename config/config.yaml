@@ -25,7 +25,7 @@ common:
   save_model: true               # Whether to save the final model after training
   
   # Experiment settings
-  project: CFL                   # Project name for tracking experiments with WandB or other tools
+  project: CD                    # Project name for tracking experiments with WandB or other tools
   seed: 42                       # Random seed for reproducibility of experiments
   
   # Augmentation settings

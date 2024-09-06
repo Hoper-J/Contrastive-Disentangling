@@ -31,9 +31,9 @@ class InstanceLoss(nn.Module):
         Returns:
         - mask: Boolean mask excluding correlated samples.
         """
-        mask = torch.eye(self.N, dtype=torch.bool).to(self.device)
-        mask[:self.batch_size, self.batch_size:] = torch.eye(self.batch_size, dtype=torch.bool).to(self.device)
-        mask[self.batch_size:, :self.batch_size] = torch.eye(self.batch_size, dtype=torch.bool).to(self.device)
+        mask = torch.eye(self.N, dtype=torch.float32).to(self.device) != 0
+        mask[:self.batch_size, self.batch_size:] = torch.eye(self.batch_size, dtype=torch.float32).to(self.device) != 0
+        mask[self.batch_size:, :self.batch_size] = torch.eye(self.batch_size, dtype=torch.float32).to(self.device) != 0
         mask = ~mask
         return mask
 
@@ -91,9 +91,9 @@ class FeatureLoss(nn.Module):
         Returns:
         - mask: Boolean mask excluding correlated features.
         """
-        mask = torch.eye(self.K, dtype=torch.bool).to(self.device)
-        mask[:self.feature_num, self.feature_num:] = torch.eye(self.feature_num, dtype=torch.bool).to(self.device)
-        mask[self.feature_num:, :self.feature_num] = torch.eye(self.feature_num, dtype=torch.bool).to(self.device)
+        mask = torch.eye(self.K, dtype=torch.float32).to(self.device) != 0
+        mask[:self.feature_num, self.feature_num:] = torch.eye(self.feature_num, dtype=torch.float32).to(self.device) != 0
+        mask[self.feature_num:, :self.feature_num] = torch.eye(self.feature_num, dtype=torch.float32).to(self.device) != 0
         mask = ~mask
         return mask
 
@@ -124,8 +124,8 @@ class FeatureLoss(nn.Module):
         Returns:
         - loss: Calculated feature loss including normalized entropy loss for diversity.
         """
-        f1 = f1.T
-        f2 = f2.T
+        f1 = f1.t()
+        f2 = f2.t()
         f = torch.cat((f1, f2), dim=0)
 
         neloss = self._normalized_entropy_loss(f)

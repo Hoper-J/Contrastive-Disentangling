@@ -47,7 +47,8 @@ def log_batch_metrics(instance_batch_loss, feature_batch_loss, batch_loss, learn
         "batch_loss": batch_loss,
         "learning_rate": learning_rate,
     })
-    
+
+
 def log_epoch_metrics(epoch, avg_instance_loss, avg_feature_loss, avg_loss, nmi_backbone, ari_backbone, acc_backbone, nmi_feature, ari_feature, acc_feature):
     """
     Logs the metrics for the current epoch to Weights & Biases (wandb).
@@ -76,6 +77,7 @@ def log_epoch_metrics(epoch, avg_instance_loss, avg_feature_loss, avg_loss, nmi_
         "ARI_feature": ari_feature,
         "ACC_feature": acc_feature
     })
+    
 
 def log_tsne_images(epoch, run_name):
     """
