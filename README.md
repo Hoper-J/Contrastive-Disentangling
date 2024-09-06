@@ -1,24 +1,24 @@
 # Learning Fine-grained Representations Without ANY Class Priors
 
-If the data is unlabeled, why should we rely on knowing the number of classes to construct a network for unsupervised learning? Is the number of classes always important? Could it be possible that class labels don't fully capture the finer-grained features within the dataset? For example, in a dataset of cats vs. dogs, breaking the labels further into white cats, non-white cats, and dogs is also a valid categorization.
+If we assume that the data is unlabeled, why should we rely on knowing the number of classes to construct a network for unsupervised learning? Is the number of classes always important? Could it be possible that class labels don't fully capture the finer-grained features within the dataset? For example, in a dataset of cats vs. dogs, breaking the labels further into white cats, non-white cats, and dogs is also a valid categorization.
 
 In this project, we propose a new model framework that eliminates the implicit assumption of relying on the number of classes, thus avoiding constraining the model to predefined tasks. This approach allows us to capture richer, fine-grained features within the data.
 
 The figures below showcase the LIME (Local Interpretable Model-Agnostic Explanations) visualizations of the feature prediction heads from the pre-trained model, as well as the contrastive learning structure used in the model.
 
-| Yellow-circled | ![lime](./Figures/FigureB.8.png)      |
-| -------------- | ------------------------------------- |
-| Unmasked       | ![lime_mask](./Figures/FigureB.9.png) |
+| Yellow-circled | ![lime](./Figures/FigureB.8.jpeg)      |
+| -------------- | -------------------------------------- |
+| Unmasked       | ![lime_mask](./Figures/FigureB.9.jpeg) |
 
-| ![2level](./Figures/Figure2.png) | ![model](./Figures/Figure1.png) |
-| -------------------------------- | ------------------------------- |
+| ![2level](./Figures/Figure2.jpeg) | ![model](./Figures/Figure1.jpeg) |
+| --------------------------------- | -------------------------------- |
 
 The following table presents the t-SNE visualizations of the model's feature extraction layer (Backbone) and the output layer (Feature Predictor).
 
-|          | CIFAR-10                                             | CIFAR-100-20                                          | STL-10                                                  | ImageNet-10                                        |
-| -------- | ---------------------------------------------------- | ----------------------------------------------------- | ------------------------------------------------------- | -------------------------------------------------- |
-| Backbone | ![tsne_backbone_cifar10](./Figures/FigureA.4(a).png) | ![tsne_backbone_cifar100](./Figures/FigureA.5(a).png) | ![tsne_backbone_imagenet10](./Figures/FigureA.6(a).png) | ![tsne_backbone_stl10](./Figures/FigureA.7(a).png) |
-| Feature  | ![tsne_feature_cifar10](./Figures/FigureA.4(b).png)  | ![tsne_feature_cifar100](./Figures/FigureA.5(b).png)  | ![tsne_feature_imagenet10](./Figures/FigureA.6(b).png)  | ![tsne_feature_stl10](./Figures/FigureA.7(b).png)  |
+|          | CIFAR-10                                              | CIFAR-100-20                                           | STL-10                                                   | ImageNet-10                                         |
+| -------- | ----------------------------------------------------- | ------------------------------------------------------ | -------------------------------------------------------- | --------------------------------------------------- |
+| Backbone | ![tsne_backbone_cifar10](./Figures/FigureA.4(a).jpeg) | ![tsne_backbone_cifar100](./Figures/FigureA.5(a).jpeg) | ![tsne_backbone_imagenet10](./Figures/FigureA.6(a).jpeg) | ![tsne_backbone_stl10](./Figures/FigureA.7(a).jpeg) |
+| Feature  | ![tsne_feature_cifar10](./Figures/FigureA.4(b).jpeg)  | ![tsne_feature_cifar100](./Figures/FigureA.5(b).jpeg)  | ![tsne_feature_imagenet10](./Figures/FigureA.6(b).jpeg)  | ![tsne_feature_stl10](./Figures/FigureA.7(b).jpeg)  |
 
 ## Experimental Setup
 
@@ -50,17 +50,40 @@ When the batch size is set to 128, the memory usage will reach **over 11GB**.
 
 If you choose to log all metrics after each epoch, the total experiment time might double.
 
+## Experiment Records
+
+Here are my experiment records, which may provide useful insights:
+
+- STL-10: [Link](https://wandb.ai/hoper-hw/CD_STL-10/workspace?nw=nwuserhoperhw)
+- ImageNet-10: [Link](https://wandb.ai/hoper-hw/CD_ImageNet-10/workspace?nw=nwuserhoperhw)
+- CIFAR-10: [Link](https://wandb.ai/hoper-hw/CD_CIFAR-10?nw=nwuserhoperhw)
+- CIFAR-100: [Link](https://wandb.ai/hoper-hw/CD_CIFAR-100?nw=nwuserhoperhw)
+
+Please note that the experiments recorded in wandb might differ from the ones you run locally. During subsequent development, I made adjustments to certain function details for improved code readability, even though the core functionality remained unchanged. Additionally, differences in hardware can also impact the results.
+
+By using the [set_seed()](https://github.com/Hoper-J/Contrastive-Disentangling/blob/245686bfeedb39561fc477d3724505c798a0282b/utils/general_utils.py#L18) function, you can ensure that future runs on your current machine will produce consistent results.
+
+## Pre-trained Models and Checkpoints
+
+All models and checkpoints related to the experiments can be found at the following link:
+
+[**Google Drive**](https://drive.google.com/drive/folders/1GP6PBjzTYJLAehMgbLLFmBMa0KeFeH-M?usp=share_link)
+
+**The model upload is expected to be completed by September 12th.**
+
+In the **Records** folder, you will find .csv files that log the training status every 100 epochs. You can quickly review these files to decide whether to load the corresponding model files. You can also use load_checkpoint() in [utils/checkpoints.py](https://github.com/Hoper-J/Contrastive-Disentangling/blob/a96bb56a74d3ab98aeebd77f6a335f7013c87549/utils/checkpoint.py#L37) to extract the records from the corresponding checkpoint.
+
+Please note that the files in the **best models** folder refer to models where the **Feature Predictor** output achieved the best **NMI** scores, not the backbone.
+
 # Quick Start
 
-## Dataset Download
+## Dataset Preparation
 
 CIFAR-10, CIFAR-100, and STL-10 can be automatically downloaded. For **ImageNet-10**, you can use Kaggle to download it from the command line:
 
 ```bash
 kaggle datasets download -d liusha249/imagenet10
 ```
-
-(Model uploading and wandb logging are in progress and are expected to be shared by September 12th.)
 
 ## How to Use Trained Model
 
@@ -89,11 +112,12 @@ Here, we address some potential questions you may have:
 3. **Why does wandb show a longer runtime than described in the paper?**
 
    There are three main reasons:
+
    - We log full metrics after each epoch, effectively doubling the computation time  (common).
    - Multiple experiments are running concurrently on the same GPU  (common).
    - Remote server shutdowns may cause wandb to record extra time due to lack of a termination signal.
 
-5. **Is 1000 epochs where the model reaches its best performance?**
+4. **Is 1000 epochs where the model reaches its best performance?**
 
    Not necessarily. We took additional time to record experimental metrics to show the changes in performance over time, rather than treating the training process as a black box where you tweak hyperparameters and wait for results. As the curves suggest, **CIFAR-10** and **CIFAR-100** still have room for improvement (+2%/1000 epochs). If you'd like to continue training the model beyond 1000 epochs, you can simply increase the number of `epochs` in the config and set `reload=True` to resume training.
 
@@ -101,16 +125,16 @@ Here, we address some potential questions you may have:
 
    We fixed the random seed to 42 for consistency with previous baselines. However, unlike previous work, we also set `torch.backends.cudnn.deterministic = True` and `torch.backends.cudnn.benchmark = False` to ensure reproducibility.
 
-   Therefore, for the same experimental config, you don’t need to re-run the code to verify the results. You can check the recorded runs on [wandb]().
+   Therefore, for the same experimental config, you don’t need to re-run the code to verify the results. You can check the recorded runs on [wandb](https://github.com/Hoper-J/Contrastive-Disentangling/tree/master?tab=readme-ov-file#experiment-records).
 
-7. **Is batch size=256 better than batch size=128?**
+6. **Is batch size=256 better than batch size=128?**
 
    Not necessarily. Larger batch sizes do not always yield better results. Our model already performs well with a batch size of 128. This is a common misconception, sometimes fueled by the availability of larger GPUs: "Why use only 12GB if you have more?"
 
-8. **How to handle the `UserWarning: Plan failed with a cudnnException` warning?**
+7. **How to handle the `UserWarning: Plan failed with a cudnnException` warning?**
 
    This warning is related to cuDNN’s handling of certain convolution operations in PyTorch. It appears because we set `torch.backends.cudnn.deterministic = True` to ensure reproducibility. You can adjust the `set_seed()` function in [utils/general_utils.py](https://github.com/Hoper-J/Contrastive-Disentangling/blob/245686bfeedb39561fc477d3724505c798a0282b/utils/general_utils.py#L18) by setting `torch.backends.cudnn.deterministic = False` and `torch.backends.cudnn.benchmark = True` if you prioritize training speed over result reproducibility.
 
-9. **Why use `torch.mm()` instead of `nn.CosineSimilarity()` for loss computation?**
+8. **Why use `torch.mm()` instead of `nn.CosineSimilarity()` for loss computation?**
 
    After normalizing the vectors, their magnitudes become 1, making the dot product equivalent to the cosine similarity.
