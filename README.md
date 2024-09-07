@@ -53,6 +53,38 @@ Please note that the experiments recorded in wandb might differ from the ones yo
 
 By using the [set_seed()](https://github.com/Hoper-J/Contrastive-Disentangling/blob/245686bfeedb39561fc477d3724505c798a0282b/utils/general_utils.py#L18) function, you can ensure that future runs on your current machine will produce consistent results.
 
+### Clustering Results
+
+We present the clustering performance at the 1000th epoch to evaluate the effectiveness of our feature learning, which is obtained by applying k-means clustering on the output during the evaluation phase. The corresponding pre-trained models are available for download. The two tables below show the clustering results for the ResNet34 Backbone and the final output of the model (Feature Predictor).
+
+**The model upload is expected to be completed by September 12th.**
+
+#### Backbone (ResNet34)
+
+| Dataset        | Models | NMI   | ARI   | ACC   | Pre-trained Model |
+| -------------- | ------ | ----- | ----- | ----- | ----------------- |
+| CIFAR-10       | CD-128 | 0.725 | 0.620 | 0.800 | [Download](#)     |
+|                | CD-256 | 0.734 | 0.635 | 0.807 | [Download](#)     |
+| CIFAR-100 (20) | CD-128 | 0.462 | 0.240 | 0.418 | [Download](#)     |
+|                | CD-256 | 0.476 | 0.231 | 0.422 | [Download](#)     |
+| STL-10         | CD-128 | 0.670 | 0.523 | 0.684 | [Download](#)     |
+|                | CD-256 | 0.687 | 0.581 | 0.758 | [Download](#)     |
+| ImageNet-10    | CD-128 | 0.893 | 0.858 | 0.927 | [Download](#)     |
+|                | CD-256 | 0.885 | 0.854 | 0.934 | [Download](#)     |
+
+#### Full Model (Feature Predictor)
+
+| Dataset      | Models | NMI   | ARI   | ACC   | Pre-trained Model |
+| ------------ | ------ | ----- | ----- | ----- | ----------------- |
+| CIFAR-10     | CD-128 | 0.711 | 0.624 | 0.788 | [Download](#)     |
+|              | CD-256 | 0.706 | 0.621 | 0.782 | [Download](#)     |
+| CIFAR-100-20 | CD-128 | 0.438 | 0.249 | 0.394 | [Download](#)     |
+|              | CD-256 | 0.446 | 0.254 | 0.416 | [Download](#)     |
+| STL-10       | CD-128 | 0.687 | 0.549 | 0.702 | [Download](#)     |
+|              | CD-256 | 0.668 | 0.572 | 0.734 | [Download](#)     |
+| ImageNet-10  | CD-128 | 0.898 | 0.869 | 0.932 | [Download](#)     |
+|              | CD-256 | 0.887 | 0.861 | 0.928 | [Download](#)     |
+
 ## Pre-trained Models and Checkpoints
 
 All models and checkpoints related to the experiments can be found at the following link:
@@ -64,6 +96,10 @@ All models and checkpoints related to the experiments can be found at the follow
 In the **Records** folder, you will find .csv files that log the training status every 100 epochs. You can quickly review these files to decide whether to load the corresponding model files. You can also use load_checkpoint() in [utils/checkpoints.py](https://github.com/Hoper-J/Contrastive-Disentangling/blob/a96bb56a74d3ab98aeebd77f6a335f7013c87549/utils/checkpoint.py#L37) to extract the records from the corresponding checkpoint.
 
 Please note that the files in the **best models** folder refer to models where the **Feature Predictor** output achieved the best **NMI** scores, not the backbone.
+
+## How to Use Trained Model
+
+We provide a `How to Use Trained Model.ipynb` file to help you quickly view the metrics of the pre-trained models. Additionally, we include a **toy example** that demonstrates how to apply the model to downstream tasks. We hope this example is helpful to you.
 
 # Quick Start
 
@@ -187,10 +223,6 @@ python train.py --dataset stl10
 The configuration file is located at [config/config.yaml](https://github.com/Hoper-J/Contrastive-Disentangling/blob/master/config/config.yaml) and will be loaded based on the dataset specified.
 
 Ensure that the environment is set up correctly and the corresponding datasets are prepared before running training. The metrics and results during training can be viewed in **wandb** (if logging is enabled).
-
-## How to Use Trained Model
-
-We provide a `How to Use Trained Model.ipynb` file to help you quickly view the metrics of the pre-trained models. Additionally, we include a **toy example** that demonstrates how to apply the model to downstream tasks. We hope this example is helpful to you.
 
 # Appendix
 
