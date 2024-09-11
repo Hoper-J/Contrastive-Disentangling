@@ -5,7 +5,7 @@ common:
   learning_rate: 0.0003          # Learning rate for the optimizer
   
   # Model settings
-  backbone: ResNet34             # Backbone network architecture
+  backbone: ResNet34             # Backbone network architecture (e.g., ResNet18, ResNet34, ResNet50)
   hidden_dim: 128                # Hidden dimension size for the instance projector's output
   feature_num: 128               # Number of feature categories the feature predictor should predict
   
@@ -34,6 +34,9 @@ common:
   
   # Dataset customization settings
   customize_datasets: false      # Allows users to customize the training dataset. If set to true, please check the `get_custom_datasets()` function in `dataset.py`.
+
+  # Logging settings
+  use_wandb: false               # Whether to use WandB for logging the experiment
 
 datasets:
   cifar10:

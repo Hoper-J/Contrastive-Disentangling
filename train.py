@@ -19,7 +19,7 @@ from utils.general_utils import (
     save_model, 
     move_model_to_finished
 )
-from utils.wandb_utils import init_wandb, log_batch_metrics, log_epoch_metrics, log_tsne_images
+from utils.wandb_utils import WandBLogger
 from utils.metrics import evaluate
 from utils.visualization import visualize_embeddings
 from utils.checkpoint import save_checkpoint, load_checkpoint
@@ -74,9 +74,9 @@ def run(config):
     instance_loss_fn = InstanceLoss(config["batch_size"], config["instance_temperature"], device=device)
     feature_loss_fn = FeatureLoss(config["feature_num"], config["feature_temperature"], device=device)
 
-    # Initialize WandB
-    init_wandb(config, experiment_name, run_id)
-        
+    # Initialize WandB logger
+    wandb_logger = WandBLogger(config, experiment_name, run_id)
+    
     for epoch in range(start_epoch, config["epochs"] + 1):
         model.train()
         instance_epoch_loss = feature_epoch_loss = epoch_loss = 0.0
@@ -102,7 +102,7 @@ def run(config):
                 torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=config["max_norm"])
             optimizer.step()
 
-            log_batch_metrics(instance_loss.item(), feature_loss.item(), loss.item(), optimizer.param_groups[0]["lr"])
+            wandb_logger.log_batch_metrics(instance_loss.item(), feature_loss.item(), loss.item(), optimizer.param_groups[0]["lr"])
 
             progress_bar.set_postfix(batch_loss=epoch_loss / (i + 1))
         
@@ -116,12 +116,13 @@ def run(config):
         nmi_backbone, ari_backbone, acc_backbone, nmi_feature, ari_feature, acc_feature = evaluate(model, test_loader, device)
 
         # Logging metrics
-        log_epoch_metrics(epoch, avg_instance_loss, avg_feature_loss, avg_loss, nmi_backbone, ari_backbone, acc_backbone, nmi_feature, ari_feature, acc_feature)
+        wandb_logger.log_epoch_metrics(epoch, avg_instance_loss, avg_feature_loss, avg_loss, nmi_backbone, ari_backbone, acc_backbone, nmi_feature, ari_feature, acc_feature)
         
         print(f"Epoch [{epoch}], Loss: {avg_loss}, Instance Loss: {avg_instance_loss}, Feature Loss: {avg_feature_loss}")
         print(f"Backbone NMI: {nmi_backbone}, Feature NMI: {nmi_feature}")
             
-        best_nmi = save_best_model(nmi_backbone, nmi_feature, best_nmi, config, model, wandb.run.name)
+        best_nmi = save_best_model(nmi_backbone, nmi_feature, best_nmi, config, model, experiment_name)
+
         records.update_best_metrics(nmi_backbone, ari_backbone, acc_backbone, nmi_feature, ari_feature, acc_feature)
         
         if epoch % 100 == 0:
@@ -131,20 +132,20 @@ def run(config):
             
             # Visualize embeddings if class number is small
             if config["class_num"] <= 20:
-                visualize_embeddings(model, visualize_loader, device, epoch, wandb.run.name)
-                log_tsne_images(epoch, wandb.run.name)
+                visualize_embeddings(model, visualize_loader, device, epoch, experiment_name)
+                wandb_logger.log_tsne_images(epoch)
 
             # Log current metrics
             records.log_best_metrics(epoch)
             records.log_current_metrics(nmi_backbone, ari_backbone, acc_backbone, nmi_feature, ari_feature, acc_feature)
 
         if config["checkpoint"]:
-            save_checkpoint(model, optimizer, epoch, wandb.run.id, records, best_nmi, scheduler, filename=checkpoint_path)
+            save_checkpoint(model, optimizer, epoch, wandb_logger.run_id, records, best_nmi, scheduler, filename=checkpoint_path)
 
-    records.save_csv(wandb.run.name)
-    move_model_to_finished(config, wandb.run.name)
+    records.save_csv(experiment_name)
+    move_model_to_finished(config, experiment_name)
     
-    wandb.finish()
+    wandb_logger.finish()
 
 
 if __name__ == "__main__":
