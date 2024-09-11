@@ -72,12 +72,12 @@ We present the clustering performance at the 1000th epoch to evaluate the effect
 
 CD is a basic and general contrastive learning framework. Compared to the SimCLR framework, which shares similar attributes, CD demonstrates improvements in backbone feature extraction capability. Both frameworks follow identical training configurations and use the same training strategy, with the only difference being the inclusion of a feature-level component in CD. The table below highlights the improvements in backbone feature extraction between CD and SimCLR:
 
-| Dataset     | Model  | NMI               | ARI               | ACC               |
-| ----------- | ------ | ----------------- | ----------------- | ----------------- |
-| STL-10      | SimCLR | 0.659 ± 0.016     | 0.530 ± 0.028     | 0.692 ± 0.030     |
-|             | CD     | **0.674 ± 0.015** | **0.545 ± 0.032** | **0.701 ± 0.034** |
-| ImageNet-10 | SimCLR | 0.870 ± 0.022     | 0.809 ± 0.064     | 0.886 ± 0.058     |
-|             | CD     | **0.886 ± 0.008** | **0.844 ± 0.022** | **0.918 ± 0.026** |
+| Dataset     | Model  | NMI                 | ARI                 | ACC                 |
+| ----------- | ------ | ------------------- | ------------------- | ------------------- |
+| STL-10      | SimCLR | 0.659 ± 0.016       | 0.530 ± 0.028       | 0.692 ± 0.030       |
+|             | CD     | ***0.674 ± 0.015*** | ***0.545 ± 0.032*** | ***0.701 ± 0.034*** |
+| ImageNet-10 | SimCLR | 0.870 ± 0.022       | 0.809 ± 0.064       | 0.886 ± 0.058       |
+|             | CD     | ***0.886 ± 0.008*** | ***0.844 ± 0.022*** | ***0.918 ± 0.026*** |
 
 #### Full Model (Feature Predictor)
 
@@ -91,6 +91,17 @@ CD is a basic and general contrastive learning framework. Compared to the SimCLR
 |              | CD-256 | 0.668 | 0.572 | 0.734 | [Download](https://drive.google.com/file/d/1gQVmBMKU4yA4WwWtgj2E78G6iprLVPg_/view?usp=share_link) |
 | ImageNet-10  | CD-128 | 0.898 | 0.869 | 0.932 | [Download](https://drive.google.com/file/d/1jd8ytearAc_KgxdqldgUjWtTwtejIOp5/view?usp=share_link) |
 |              | CD-256 | 0.887 | 0.861 | 0.928 | [Download](https://drive.google.com/file/d/1PApnbNW4KuuC1wWHpWtzRaTCwHYQGfcl/view?usp=share_link) |
+
+Additionally, the **Feature Predictor output** of CD is more meaningful. We further compare it with the final output of SimCLR in terms of clustering metrics.
+
+| Dataset     | Models | NMI                 | ARI                 | ACC                 |
+| ----------- | ------ | ------------------- | ------------------- | ------------------- |
+| STL-10      | SimCLR | 0.599 ± 0.029       | 0.458 ± 0.043       | 0.649 ± 0.053       |
+|             | CD     | ***0.679 ± 0.007*** | ***0.564 ± 0.023*** | ***0.720 ± 0.026*** |
+| ImageNet-10 | SimCLR | 0.708 ± 0.031       | 0.413 ± 0.060       | 0.608 ± 0.065       |
+|             | CD     | ***0.898 ± 0.003*** | ***0.868 ± 0.006*** | ***0.931 ± 0.003*** |
+
+It can be observed that the feature disentanglement capability of SimCLR’s final output layer is significantly lower than that of its Backbone, whereas CD does not exhibit this issue.
 
 ## Pre-trained Models and Checkpoints
 
@@ -256,24 +267,24 @@ Here, we address some potential questions you may have:
    - Multiple experiments are running concurrently on the same GPU  (common).
    - Remote server shutdowns may cause wandb to record extra time due to lack of a termination signal.
 
-5. **Is 1000 epochs where the model reaches its best performance?**
+4. **Is 1000 epochs where the model reaches its best performance?**
 
    Not necessarily. We took additional time to record experimental metrics to show the changes in performance over time, rather than treating the training process as a black box where you tweak hyperparameters and wait for results. As the curves suggest, **CIFAR-10** and **CIFAR-100** still have room for improvement (+2%/1000 epochs). If you'd like to continue training the model beyond 1000 epochs, you can simply increase the number of `epochs` in the config and set `reload=True` to resume training.
 
-6. **Why is the random seed fixed to 42?**
+5. **Why is the random seed fixed to 42?**
 
    We fixed the random seed to 42 for consistency with previous baselines. However, unlike previous work, we also set `torch.backends.cudnn.deterministic = True` and `torch.backends.cudnn.benchmark = False` to ensure reproducibility.
 
    Therefore, for the same experimental config, you don’t need to re-run the code to verify the results. You can check the recorded runs on [wandb](https://github.com/Hoper-J/Contrastive-Disentangling/tree/master?tab=readme-ov-file#experiment-records).
 
-7. **Is batch size=256 better than batch size=128?**
+6. **Is batch size=256 better than batch size=128?**
 
    Not necessarily. Larger batch sizes do not always yield better results. Our model already performs well with a batch size of 128. This is a common misconception, sometimes fueled by the availability of larger GPUs: "Why use only 12GB if you have more?"
 
-8. **How to handle the `UserWarning: Plan failed with a cudnnException` warning?**
+7. **How to handle the `UserWarning: Plan failed with a cudnnException` warning?**
 
    This warning is related to cuDNN’s handling of certain convolution operations in PyTorch. It appears because we set `torch.backends.cudnn.deterministic = True` to ensure reproducibility. You can adjust the `set_seed()` function in [utils/general_utils.py](https://github.com/Hoper-J/Contrastive-Disentangling/blob/245686bfeedb39561fc477d3724505c798a0282b/utils/general_utils.py#L18) by setting `torch.backends.cudnn.deterministic = False` and `torch.backends.cudnn.benchmark = True` if you prioritize training speed over result reproducibility.
 
-9. **Why use `torch.mm()` instead of `nn.CosineSimilarity()` for loss computation?**
+8. **Why use `torch.mm()` instead of `nn.CosineSimilarity()` for loss computation?**
 
    After normalizing the vectors, their magnitudes become 1, making the dot product equivalent to the cosine similarity.
