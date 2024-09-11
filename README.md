@@ -2,7 +2,7 @@
 
 If we assume that the data is unlabeled, why should we rely on knowing the number of classes to construct a network for unsupervised learning? Is the number of classes always important? Could it be possible that class labels don't fully capture the finer-grained features within the dataset? For example, in a dataset of cats vs. dogs, breaking the labels further into white cats, non-white cats, and dogs is also a valid categorization.
 
-In this project, we propose a new model framework that eliminates the implicit assumption of relying on the number of classes, thus avoiding constraining the model to predefined tasks. This approach allows us to capture richer, fine-grained features within the data.
+In this project, we propose a new model framework that eliminates the implicit assumption of relying on the number of classes, thus avoiding constraining the model to predefined tasks. This approach allows us to capture richer, fine-grained features within the data. Experiments show that CD outperforms **SimCLR** in feature extraction capability, and pre-trained models for downstream task development are available for download in the [Backbone](https://github.com/Hoper-J/Contrastive-Disentangling?tab=readme-ov-file#backbone-resnet34).
 
 The figures below showcase the LIME (Local Interpretable Model-Agnostic Explanations) visualizations of the feature prediction heads from the pre-trained model, as well as the contrastive learning structure used in the model.
 
@@ -33,10 +33,10 @@ When the batch size is set to 128, the memory usage will reach **over 11GB**.
 
 | Dataset     | Time per Epoch   | Total Time (1000 epochs) |
 | ----------- | ---------------- | ------------------------ |
-| STL-10      | 38 seconds       | 10.5 hours               |
-| ImageNet-10 | 40 seconds       | 11.1 hours               |
 | CIFAR-10    | 2m 51s (171 sec) | 47.5 hours               |
 | CIFAR-100   | 2m 51s (171 sec) | 47.5 hours               |
+| STL-10      | 38 seconds       | 10.5 hours               |
+| ImageNet-10 | 40 seconds       | 11.1 hours               |
 
 If you choose to log all metrics after each epoch, the total experiment time might double.
 
@@ -44,10 +44,10 @@ If you choose to log all metrics after each epoch, the total experiment time mig
 
 Here are my experiment records, which may provide useful insights:
 
-- STL-10: [Link](https://wandb.ai/hoper-hw/CD_STL-10/workspace?nw=nwuserhoperhw)
-- ImageNet-10: [Link](https://wandb.ai/hoper-hw/CD_ImageNet-10/workspace?nw=nwuserhoperhw)
 - CIFAR-10: [Link](https://wandb.ai/hoper-hw/CD_CIFAR-10?nw=nwuserhoperhw)
 - CIFAR-100: [Link](https://wandb.ai/hoper-hw/CD_CIFAR-100?nw=nwuserhoperhw)
+- STL-10: [Link](https://wandb.ai/hoper-hw/CD_STL-10/workspace?nw=nwuserhoperhw)
+- ImageNet-10: [Link](https://wandb.ai/hoper-hw/CD_ImageNet-10/workspace?nw=nwuserhoperhw)
 
 Please note that the experiments recorded in wandb might differ from the ones you run locally. During subsequent development, I made adjustments to certain function details for improved code readability, even though the core functionality remained unchanged. Additionally, differences in hardware can also impact the results.
 
@@ -55,43 +55,48 @@ By using the [set_seed()](https://github.com/Hoper-J/Contrastive-Disentangling/b
 
 ### Clustering Results
 
-We present the clustering performance at the 1000th epoch to evaluate the effectiveness of our feature learning, which is obtained by applying k-means clustering on the output during the evaluation phase. The corresponding pre-trained models are available for download. The two tables below show the clustering results for the ResNet34 Backbone and the final output of the model (Feature Predictor).
-
-**The model upload is expected to be completed by September 12th.**
+We present the clustering performance at the 1000th epoch to evaluate the effectiveness of our feature learning. The corresponding t-SNE visualizations can be found above. This performance is obtained by applying k-means clustering on the output during the evaluation phase. The corresponding pre-trained models are available for download. The two tables below show the clustering results for the ResNet34 Backbone and the final output of the model (Feature Predictor).
 
 #### Backbone (ResNet34)
 
-| Dataset        | Models | NMI   | ARI   | ACC   | Pre-trained Model |
-| -------------- | ------ | ----- | ----- | ----- | ----------------- |
-| CIFAR-10       | CD-128 | 0.725 | 0.620 | 0.800 | [Download](#)     |
-|                | CD-256 | 0.734 | 0.635 | 0.807 | [Download](#)     |
-| CIFAR-100 (20) | CD-128 | 0.462 | 0.240 | 0.418 | [Download](#)     |
-|                | CD-256 | 0.476 | 0.231 | 0.422 | [Download](#)     |
-| STL-10         | CD-128 | 0.670 | 0.523 | 0.684 | [Download](#)     |
-|                | CD-256 | 0.687 | 0.581 | 0.758 | [Download](#)     |
-| ImageNet-10    | CD-128 | 0.893 | 0.858 | 0.927 | [Download](#)     |
-|                | CD-256 | 0.885 | 0.854 | 0.934 | [Download](#)     |
+| Dataset      | Models | NMI   | ARI   | ACC   | Pre-trained Model                                            |
+| ------------ | ------ | ----- | ----- | ----- | ------------------------------------------------------------ |
+| CIFAR-10     | CD-128 | 0.725 | 0.620 | 0.800 | [Download](https://drive.google.com/file/d/1joZEzN2ElmpZB8Of1o2c6xJ_FWSu8iPB/view?usp=share_link) |
+|              | CD-256 | 0.734 | 0.635 | 0.807 | [Download](https://drive.google.com/file/d/18oFCOBWIAM4EWbc6WqxiDFRmdgFlKLgP/view?usp=share_link) |
+| CIFAR-100-20 | CD-128 | 0.462 | 0.240 | 0.418 | [Download](https://drive.google.com/file/d/1m7AJRUMfRmBneIzVnzwmXXqIeFnb-wSH/view?usp=share_link) |
+|              | CD-256 | 0.476 | 0.231 | 0.422 | [Download](https://drive.google.com/file/d/1uDPDDHZPi-42opd83NK0o-NPeOohlW24/view?usp=share_link) |
+| STL-10       | CD-128 | 0.670 | 0.523 | 0.684 | [Download](https://drive.google.com/file/d/1Cum1N9i80fjstBvTDD0-4TWvlx2aEVsr/view?usp=share_link) |
+|              | CD-256 | 0.687 | 0.581 | 0.758 | [Download](https://drive.google.com/file/d/1dteqVIpM7F-082Ibm_1azkn08MBM8pzM/view?usp=share_link) |
+| ImageNet-10  | CD-128 | 0.893 | 0.858 | 0.927 | [Download](https://drive.google.com/file/d/1FnNrtaOzjYfBW01hkzYawnro8DPkD3pv/view?usp=share_link) |
+|              | CD-256 | 0.885 | 0.854 | 0.934 | [Download](https://drive.google.com/file/d/1DdEbbMEfYKZHVKUYZxOjovFxKDVZ_7Ui/view?usp=share_link) |
+
+CD is a basic and general contrastive learning framework. Compared to the SimCLR framework, which shares similar attributes, CD demonstrates improvements in backbone feature extraction capability. Both frameworks follow identical training configurations and use the same training strategy, with the only difference being the inclusion of a feature-level component in CD. The table below highlights the improvements in backbone feature extraction between CD and SimCLR:
+
+| Dataset     | Model  | NMI               | ARI               | ACC               |
+| ----------- | ------ | ----------------- | ----------------- | ----------------- |
+| STL-10      | SimCLR | 0.659 ± 0.016     | 0.530 ± 0.028     | 0.692 ± 0.030     |
+|             | CD     | **0.674 ± 0.015** | **0.545 ± 0.032** | **0.701 ± 0.034** |
+| ImageNet-10 | SimCLR | 0.870 ± 0.022     | 0.809 ± 0.064     | 0.886 ± 0.058     |
+|             | CD     | **0.886 ± 0.008** | **0.844 ± 0.022** | **0.918 ± 0.026** |
 
 #### Full Model (Feature Predictor)
 
-| Dataset      | Models | NMI   | ARI   | ACC   | Pre-trained Model |
-| ------------ | ------ | ----- | ----- | ----- | ----------------- |
-| CIFAR-10     | CD-128 | 0.711 | 0.624 | 0.788 | [Download](#)     |
-|              | CD-256 | 0.706 | 0.621 | 0.782 | [Download](#)     |
-| CIFAR-100-20 | CD-128 | 0.438 | 0.249 | 0.394 | [Download](#)     |
-|              | CD-256 | 0.446 | 0.254 | 0.416 | [Download](#)     |
-| STL-10       | CD-128 | 0.687 | 0.549 | 0.702 | [Download](#)     |
-|              | CD-256 | 0.668 | 0.572 | 0.734 | [Download](#)     |
-| ImageNet-10  | CD-128 | 0.898 | 0.869 | 0.932 | [Download](#)     |
-|              | CD-256 | 0.887 | 0.861 | 0.928 | [Download](#)     |
+| Dataset      | Models | NMI   | ARI   | ACC   | Pre-trained Model                                            |
+| ------------ | ------ | ----- | ----- | ----- | ------------------------------------------------------------ |
+| CIFAR-10     | CD-128 | 0.711 | 0.624 | 0.788 | [Download](https://drive.google.com/file/d/1arYOsHhWPUJ3pmUL038UK1yvlG1CJD50/view?usp=share_link) |
+|              | CD-256 | 0.706 | 0.621 | 0.782 | [Download](https://drive.google.com/file/d/1ioTjfk5IZqHqImbBtexA-XIIqp5PY3AB/view?usp=share_link) |
+| CIFAR-100-20 | CD-128 | 0.438 | 0.249 | 0.394 | [Download](https://drive.google.com/file/d/1z9uGHRPXa05Eif3oD7VFlhX_mnyHZj4m/view?usp=share_link) |
+|              | CD-256 | 0.446 | 0.254 | 0.416 | [Download](https://drive.google.com/file/d/1OqN51a-3_v8-dA0OCC_lUSPvlf10fX3O/view?usp=share_link) |
+| STL-10       | CD-128 | 0.687 | 0.549 | 0.702 | [Download](https://drive.google.com/file/d/1RXLzAqeOjkQPDMNijOFsKExikp7CfK1W/view?usp=share_link) |
+|              | CD-256 | 0.668 | 0.572 | 0.734 | [Download](https://drive.google.com/file/d/1gQVmBMKU4yA4WwWtgj2E78G6iprLVPg_/view?usp=share_link) |
+| ImageNet-10  | CD-128 | 0.898 | 0.869 | 0.932 | [Download](https://drive.google.com/file/d/1jd8ytearAc_KgxdqldgUjWtTwtejIOp5/view?usp=share_link) |
+|              | CD-256 | 0.887 | 0.861 | 0.928 | [Download](https://drive.google.com/file/d/1PApnbNW4KuuC1wWHpWtzRaTCwHYQGfcl/view?usp=share_link) |
 
 ## Pre-trained Models and Checkpoints
 
 All models and checkpoints related to the experiments can be found at the following link:
 
 [**Google Drive**](https://drive.google.com/drive/folders/1GP6PBjzTYJLAehMgbLLFmBMa0KeFeH-M?usp=share_link)
-
-**The model upload is expected to be completed by September 12th.**
 
 In the **Records** folder, you will find .csv files that log the training status every 100 epochs. You can quickly review these files to decide whether to load the corresponding model files. You can also use load_checkpoint() in [utils/checkpoints.py](https://github.com/Hoper-J/Contrastive-Disentangling/blob/a96bb56a74d3ab98aeebd77f6a335f7013c87549/utils/checkpoint.py#L37) to extract the records from the corresponding checkpoint.
 
@@ -255,7 +260,7 @@ Here, we address some potential questions you may have:
 
    Not necessarily. We took additional time to record experimental metrics to show the changes in performance over time, rather than treating the training process as a black box where you tweak hyperparameters and wait for results. As the curves suggest, **CIFAR-10** and **CIFAR-100** still have room for improvement (+2%/1000 epochs). If you'd like to continue training the model beyond 1000 epochs, you can simply increase the number of `epochs` in the config and set `reload=True` to resume training.
 
-5. **Why is the random seed fixed to 42?**
+6. **Why is the random seed fixed to 42?**
 
    We fixed the random seed to 42 for consistency with previous baselines. However, unlike previous work, we also set `torch.backends.cudnn.deterministic = True` and `torch.backends.cudnn.benchmark = False` to ensure reproducibility.
 
