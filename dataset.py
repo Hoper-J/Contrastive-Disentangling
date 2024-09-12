@@ -147,9 +147,28 @@ def get_data_loader(config):
 
         # Concatenate train and test datasets
         if config['dataset'] not in ['imagenet10', 'tiny-imagenet']:
-            dataset = ConcatDataset([train_dataset, test_dataset])
-            train_dataset = dataset
-            test_dataset = dataset
+            full_dataset = ConcatDataset([train_dataset, test_dataset])
+            train_dataset = full_dataset
+            test_dataset = full_dataset
+            
+        # Apply evaluation_mode logic to create the test set
+        eval_mode = config.get('evaluation_mode', 'all')
+        if isinstance(eval_mode, float) and 0.0 < eval_mode <= 1.0:
+            # Use a percentage of the concatenated dataset as the test set
+            total_samples = len(test_dataset)
+            subset_size = int(total_samples * eval_mode)
+            subset_indices = np.random.choice(total_samples, subset_size, replace=False)
+            test_dataset = Subset(test_dataset, subset_indices)
+        elif eval_mode == "all":
+            # Keep test_dataset as it is (full dataset)
+            pass
+        elif eval_mode == "none":
+            # Evaluation mode is 'none': 
+            # The test dataset is still created for future evaluation (e.g., at the end of training),
+            # but during training, the model will not be evaluated on the test set after each epoch.
+            pass
+        else:
+            raise ValueError(f"Invalid evaluation_mode: {eval_mode}. Must be 'none', 'all', or a float between 0 and 1.")
 
     # Subset for visualization
     visualize_indices = np.random.choice(len(test_dataset), 1000, replace=False)

@@ -35,6 +35,9 @@ common:
   # Dataset customization settings
   customize_datasets: false      # Allows users to customize the training dataset. If set to true, please check the `get_custom_datasets()` function in `dataset.py`.
 
+  # Evaluation settings
+  evaluation_mode: 0.1           # "all" for evaluating on the full dataset after each training epoch, "none" for skipping evaluation after each epoch (test dataset is still created for final evaluation), "number" for evaluating on a percentage of the dataset after each epoch (e.g., 0.1 for 10%)
+  
   # Logging settings
   use_wandb: false               # Whether to use WandB for logging the experiment
 

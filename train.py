@@ -113,17 +113,20 @@ def run(config):
         avg_instance_loss = instance_epoch_loss / len(train_loader)
         avg_feature_loss = feature_epoch_loss / len(train_loader)
 
-        nmi_backbone, ari_backbone, acc_backbone, nmi_feature, ari_feature, acc_feature = evaluate(model, test_loader, device)
+        # Check if we should evaluate
+        if config["evaluation_mode"] != "none":
+            # Perform evaluation
+            nmi_backbone, ari_backbone, acc_backbone, nmi_feature, ari_feature, acc_feature = evaluate(model, test_loader, device)
 
-        # Logging metrics
-        wandb_logger.log_epoch_metrics(epoch, avg_instance_loss, avg_feature_loss, avg_loss, nmi_backbone, ari_backbone, acc_backbone, nmi_feature, ari_feature, acc_feature)
-        
-        print(f"Epoch [{epoch}], Loss: {avg_loss}, Instance Loss: {avg_instance_loss}, Feature Loss: {avg_feature_loss}")
-        print(f"Backbone NMI: {nmi_backbone}, Feature NMI: {nmi_feature}")
+            # Logging metrics
+            wandb_logger.log_epoch_metrics(epoch, avg_instance_loss, avg_feature_loss, avg_loss, nmi_backbone, ari_backbone, acc_backbone, nmi_feature, ari_feature, acc_feature)
             
-        best_nmi = save_best_model(nmi_backbone, nmi_feature, best_nmi, config, model, experiment_name)
+            print(f"Epoch [{epoch}], Loss: {avg_loss}, Instance Loss: {avg_instance_loss}, Feature Loss: {avg_feature_loss}")
+            print(f"Backbone NMI: {nmi_backbone}, Feature NMI: {nmi_feature}")
 
-        records.update_best_metrics(nmi_backbone, ari_backbone, acc_backbone, nmi_feature, ari_feature, acc_feature)
+            best_nmi = save_best_model(nmi_backbone, nmi_feature, best_nmi, config, model, experiment_name)
+
+            records.update_best_metrics(nmi_backbone, ari_backbone, acc_backbone, nmi_feature, ari_feature, acc_feature)
         
         if epoch % 100 == 0:
             # Save the model
