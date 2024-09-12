@@ -38,7 +38,9 @@ When the batch size is set to 128, the memory usage will reach **over 11GB**.
 | STL-10      | 38 seconds       | 10.5 hours               |
 | ImageNet-10 | 40 seconds       | 11.1 hours               |
 
-If you choose to log all metrics after each epoch, the total experiment time might double.
+If you choose to use the full dataset (train + test) to evaluate metrics after each epoch, the total experiment time may increase by approximately 30%.
+
+You can modify evaluation behavior through the [config/config.yaml](https://github.com/Hoper-J/Contrastive-Disentangling/blob/1bbb64a21eab17aed9b8effb0e72bcac80be8d52/config/config.yaml#L39) file. Setting `evaluation_mode` to `all` evaluates the full dataset after each epoch, `none` evaluates only after training is complete or every 100 epochs when recording records, and `values` between 0 and 1 represent the percentage of the full dataset used for evaluation (e.g., 0.1 uses 10% of the dataset).
 
 ## Experiment Records
 
@@ -52,6 +54,8 @@ Here are my experiment records, which may provide useful insights:
 Please note that the experiments recorded in wandb might differ from the ones you run locally. During subsequent development, I made adjustments to certain function details for improved code readability, even though the core functionality remained unchanged. Additionally, differences in hardware can also impact the results.
 
 By using the [set_seed()](https://github.com/Hoper-J/Contrastive-Disentangling/blob/245686bfeedb39561fc477d3724505c798a0282b/utils/general_utils.py#L18) function, you can ensure that future runs on your current machine will produce consistent results.
+
+If you need to log experiment metrics, set `use_wandb` to `true` in the [config/config.yaml](https://github.com/Hoper-J/Contrastive-Disentangling/blob/1bbb64a21eab17aed9b8effb0e72bcac80be8d52/config/config.yaml#L42), as the default value is `false`.
 
 ### Clustering Results
 
@@ -263,7 +267,7 @@ Here, we address some potential questions you may have:
 3. **Why does wandb show a longer runtime than described in the paper?**
 
    There are three main reasons:
-   - We log full metrics after each epoch, effectively doubling the computation time  (common).
+   - We evaluate the full dataset after each epoch, which increases the actual computation time (common).
    - Multiple experiments are running concurrently on the same GPU  (common).
    - Remote server shutdowns may cause wandb to record extra time due to lack of a termination signal.
 
