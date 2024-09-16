@@ -2,7 +2,7 @@
 
 If we assume that the data is unlabeled, why should we rely on knowing the number of classes to construct a network for unsupervised learning? Is the number of classes always important? Could it be possible that class labels don't fully capture the finer-grained features within the dataset? For example, in a dataset of cats vs. dogs, breaking the labels further into white cats, non-white cats, and dogs is also a valid categorization.
 
-In this project, we propose a new model framework that eliminates the implicit assumption of relying on the number of classes, thus avoiding constraining the model to predefined tasks. This approach allows us to capture richer, fine-grained features within the data. Experiments show that CD outperforms **SimCLR** in feature extraction capability, and pre-trained models for downstream task development are available for download in the [Backbone](https://github.com/Hoper-J/Contrastive-Disentangling?tab=readme-ov-file#backbone-resnet34).
+In this project, we propose a new model framework that eliminates the implicit assumption of relying on the number of classes, thus avoiding constraining the model to predefined tasks. This approach enables the capture of more fine-grained features from the data. Experiments show that CD outperforms **SimCLR** in feature extraction capability, and pre-trained models for downstream task development are available for download in the [Clustering Results](https://github.com/Hoper-J/Contrastive-Disentangling?tab=readme-ov-file#clustering-results). Additionally, the **final layer output** of the model contains more semantically rich information. For example, in clustering tasks, applying k-means directly to the final layer output under identical experimental configurations results in a 13.4% improvement in NMI, a 23.1% improvement in ARI, and a 10.9% improvement in ACC on the STL-10 dataset. On the ImageNet-10 dataset, NMI improved by 26.8%, ARI by 110.2%, and ACC by 53.1% compared to **SimCLR-style** models. We found that as training progresses, CD tends to stabilize, whereas SimCLR shows considerable fluctuations. You can check the corresponding reports here: [STL-10](https://wandb.ai/hoper-hw/CD_STL-10/reports/CD-vs-SimCLR-style-BS128-STL-10--Vmlldzo5Mzc4MzUw) | [ImageNet-10](https://wandb.ai/hoper-hw/CD_ImageNet-10/reports/CD-vs-SimCLR-style-BS128-ImageNet-10--Vmlldzo5MzczMjIy).
 
 The figures below showcase the LIME (Local Interpretable Model-Agnostic Explanations) visualizations of the feature prediction heads from the pre-trained model, as well as the contrastive learning structure used in the model.
 
@@ -82,6 +82,8 @@ CD is a basic and general contrastive learning framework. Compared to the SimCLR
 |             | CD     | ***0.674 ± 0.015*** | ***0.545 ± 0.032*** | ***0.701 ± 0.034*** |
 | ImageNet-10 | SimCLR | 0.870 ± 0.022       | 0.809 ± 0.064       | 0.886 ± 0.058       |
 |             | CD     | ***0.886 ± 0.008*** | ***0.844 ± 0.022*** | ***0.918 ± 0.026*** |
+
+You can try using our model as a pretext model for downstream experiments.
 
 #### Full Model (Feature Predictor)
 
