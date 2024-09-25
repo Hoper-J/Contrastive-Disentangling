@@ -27,6 +27,9 @@ def evaluate_model(dataset, config_path='config/config.yaml', model_path=None, e
     config = load_config(config_path, dataset)
     config["dataset"] = dataset
 
+    # Ensure full dataset evaluation during evaluation
+    config["evaluation_mode"] = "all"
+
     set_seed(config["seed"])
     
     # Determine experiment name and model name
