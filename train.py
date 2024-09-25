@@ -145,6 +145,10 @@ def run(config):
         if config["checkpoint"]:
             save_checkpoint(model, optimizer, epoch, wandb_logger.run_id, records, best_nmi, scheduler, filename=checkpoint_path)
 
+    # Save model after final epoch if it wasn't saved in the last iteration
+    if config["save_model"] and epoch % 100 != 0:
+        save_model(model, config["dataset"], epoch)
+
     records.save_csv(experiment_name)
     move_model_to_finished(config, experiment_name)
     
