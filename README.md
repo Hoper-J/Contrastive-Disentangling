@@ -2,7 +2,7 @@
 
 If we assume that the data is unlabeled, why should we rely on knowing the number of classes to construct a network for unsupervised learning? Is the number of classes always important? Could it be possible that class labels don't fully capture the finer-grained features within the dataset? For example, in a dataset of cats vs. dogs, breaking the labels further into white cats, non-white cats, and dogs is also a valid categorization.
 
-In this project, we propose a new model framework that eliminates the implicit assumption of relying on the number of classes, thus avoiding constraining the model to predefined tasks. This approach enables the capture of more fine-grained features from the data. Experiments show that CD outperforms **SimCLR** in feature extraction capability, and pre-trained models for downstream task development are available for download in the [Clustering Results](https://github.com/Hoper-J/Contrastive-Disentangling?tab=readme-ov-file#clustering-results). Additionally, the **final layer output** of the model contains more semantically rich information. For example, in clustering tasks, applying k-means directly to the final layer output under identical experimental configurations results in a 13.4% improvement in NMI, a 23.1% improvement in ARI, and a 10.9% improvement in ACC on the STL-10 dataset. On the ImageNet-10 dataset, NMI improved by 26.8%, ARI by 110.2%, and ACC by 53.1% compared to **SimCLR-style** models. We found that as training progresses, CD tends to stabilize, whereas SimCLR shows considerable fluctuations. You can check the corresponding reports here: [STL-10](https://wandb.ai/hoper-hw/CD_STL-10/reports/CD-vs-SimCLR-style-BS128-STL-10--Vmlldzo5Mzc4MzUw) | [ImageNet-10](https://wandb.ai/hoper-hw/CD_ImageNet-10/reports/CD-vs-SimCLR-style-BS128-ImageNet-10--Vmlldzo5MzczMjIy).
+In this project, we propose a new model framework that eliminates the implicit assumption of relying on the number of classes, thus avoiding constraining the model to predefined tasks. This approach enables the capture of more fine-grained features from the data. Experiments show that CD outperforms **SimCLR** in feature extraction capability, and pre-trained models for downstream task development are available for download in the [Clustering Results](https://github.com/Hoper-J/Contrastive-Disentangling?tab=readme-ov-file#clustering-results). Additionally, the **final layer output** of the model is able to capture more semantically rich information on more complex datasets. For example, in clustering tasks, applying k-means directly to the final layer output under identical experimental configurations results in a 13.4% improvement in NMI, a 23.1% improvement in ARI, and a 10.9% improvement in ACC on the STL-10 dataset. On the ImageNet-10 dataset, NMI improved by 26.8%, ARI by 110.2%, and ACC by 53.1% compared to **SimCLR-style** models. We found that as training progresses, CD tends to stabilize, whereas SimCLR shows considerable fluctuations. You can check the corresponding reports here: [STL-10](https://wandb.ai/hoper-hw/CD_STL-10/reports/CD-vs-SimCLR-style-BS128-STL-10--Vmlldzo5Mzc4MzUw) | [ImageNet-10](https://wandb.ai/hoper-hw/CD_ImageNet-10/reports/CD-vs-SimCLR-style-BS128-ImageNet-10--Vmlldzo5MzczMjIy).
 
 The figures below showcase the LIME (Local Interpretable Model-Agnostic Explanations) visualizations of the feature prediction heads from the pre-trained model, as well as the contrastive learning structure used in the model.
 
@@ -245,6 +245,31 @@ python train.py --dataset stl10
 The configuration file is located at [config/config.yaml](https://github.com/Hoper-J/Contrastive-Disentangling/blob/master/config/config.yaml) and will be loaded based on the dataset specified.
 
 Ensure that the environment is set up correctly and the corresponding datasets are prepared before running training. The metrics and results during training can be viewed in **wandb** (if logging is enabled).
+
+## Model Evaluation
+
+To evaluate the model on the **STL-10** dataset, use the following command:
+
+```bash
+python evaluate.py --dataset stl10
+```
+
+You can also use the `--epoch` argument to evaluate a model saved at a specific training epoch (e.g., the model saved at epoch 800):
+
+```bash
+python evaluate.py --dataset stl10 --epoch 800
+```
+
+If you have a specific model file path, use the `--model` argument:
+
+```bash
+python evaluate.py --dataset stl10 --model path/to/model.pth
+```
+
+**Notes:**
+
+- When the `--model` argument is specified, the `--epoch` argument will be ignored.
+- If neither `--model` nor `--epoch` is provided, the epoch set in [config/config.yaml](https://github.com/Hoper-J/Contrastive-Disentangling/blob/master/config/config.yaml) will be used by default.
 
 # Appendix
 
