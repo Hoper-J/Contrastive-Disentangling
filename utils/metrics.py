@@ -3,6 +3,7 @@ import torch
 from sklearn import metrics
 from sklearn.cluster import KMeans
 from scipy.optimize import linear_sum_assignment
+from tqdm import tqdm
 
 
 def evaluate(model, loader, device):
@@ -28,7 +29,7 @@ def evaluate(model, loader, device):
     labels = []
 
     with torch.no_grad():
-        for (x, y) in loader:
+        for (x, y) in tqdm(loader, desc="Evaluating", leave=False):
             x = x.to(device)
             h, f = model.extract_backbone_and_feature(x)
             embeddings_backbone.append(h.cpu().numpy())
