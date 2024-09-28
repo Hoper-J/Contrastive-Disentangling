@@ -147,13 +147,14 @@ We recommend using a more recent environment configuration to achieve the best p
 2. Install PyTorch and CUDA:
 
    - Recommended version:
+     The commands below use CUDA 11.8 as an example, but higher versions are also supported.
 
      ```bash
      # Using pip
-     pip install torch torchvision torchaudio
+     pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
      
      # Or using conda
-     conda install pytorch::pytorch torchvision torchaudio -c pytorch
+     conda install pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch -c nvidia
      ```
 
    - Compatibility version:
